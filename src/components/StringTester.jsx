@@ -118,7 +118,7 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
       <div style={{ flexShrink: 0 }}>
         <div style={labelStyle}>String Simulator</div>
         {normalizedDfa && (
-          <div style={{ fontSize: 9, fontFamily: V('--font-mono'), color: V('--text-muted'), marginTop: 2 }}>
+          <div style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted'), marginTop: 3 }}>
             Σ = {'{'}<span style={{ color: '#38bdf8' }}>{normalizedDfa.alphabet?.join(', ')}</span>{'}'}
             {' · '}{normalizedDfa.states?.length} states
           </div>
@@ -127,7 +127,7 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
 
       {/* ── Input row ──────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0 }}>
-        <div style={{ display: 'flex', gap: 5 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
           {/* Text input */}
           <input
             value={input}
@@ -144,8 +144,8 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
               flex: 1, minWidth: 0,
               background: V('--bg-elevated'),
               border: '1px solid var(--border)',
-              borderRadius: 7, padding: '7px 10px',
-              fontFamily: V('--font-mono'), fontSize: 13,
+              borderRadius: 7, padding: '8px 12px',
+              fontFamily: V('--font-mono'), fontSize: 14,
               color: V('--text-primary'), outline: 'none',
               opacity: normalizedDfa ? 1 : 0.4,
               transition: 'border-color 0.2s',
@@ -157,11 +157,11 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
           <button
             onClick={handleRandom} disabled={!normalizedDfa} title="Random string"
             style={{
-              flexShrink: 0, width: 34, borderRadius: 7,
+              flexShrink: 0, width: 38, borderRadius: 7,
               background: normalizedDfa ? 'rgba(245,158,11,0.12)' : V('--bg-elevated'),
               border: `1px solid ${normalizedDfa ? 'rgba(245,158,11,0.35)' : V('--border-subtle')}`,
               color: normalizedDfa ? '#fbbf24' : V('--text-muted'),
-              fontSize: 16, cursor: normalizedDfa ? 'pointer' : 'not-allowed',
+              fontSize: 18, cursor: normalizedDfa ? 'pointer' : 'not-allowed',
               opacity: normalizedDfa ? 1 : 0.4,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.15s',
@@ -173,10 +173,10 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
           <button
             onClick={() => runSimulation()} disabled={!normalizedDfa}
             style={{
-              flexShrink: 0, borderRadius: 7, padding: '7px 12px',
+              flexShrink: 0, borderRadius: 7, padding: '8px 14px',
               background: normalizedDfa ? 'linear-gradient(135deg,#6e56cf,#b44dff)' : V('--bg-elevated'),
               color: '#fff', border: 'none',
-              fontFamily: V('--font-mono'), fontWeight: 700, fontSize: 12,
+              fontFamily: V('--font-mono'), fontWeight: 700, fontSize: 13,
               cursor: normalizedDfa ? 'pointer' : 'not-allowed',
               opacity: normalizedDfa ? 1 : 0.4,
               boxShadow: normalizedDfa ? '0 2px 10px rgba(110,86,207,0.4)' : 'none',
@@ -191,7 +191,7 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
         <div style={{ flexShrink: 0 }}>
           <div style={labelStyle}>Input Tape</div>
           <div style={{
-            display: 'flex', gap: 3, flexWrap: 'nowrap',
+            display: 'flex', gap: 4, flexWrap: 'nowrap',
             marginTop: 6, overflowX: 'auto', paddingBottom: 4,
           }}>
             {/* Start marker */}
@@ -201,11 +201,11 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
               background: step === 0 ? 'rgba(110,86,207,0.18)' : 'transparent',
               border: `1px solid ${step === 0 ? 'rgba(110,86,207,0.5)' : 'var(--border-subtle)'}`,
               boxShadow: step === 0 ? '0 0 8px rgba(110,86,207,0.3)' : 'none',
-              fontSize: 11,
+              fontSize: 13,
             }}>▶</div>
 
             {input.length === 0 && (
-              <div style={{ ...tapeCell, color: V('--text-muted'), fontSize: 11 }}>ε</div>
+              <div style={{ ...tapeCell, color: V('--text-muted'), fontSize: 13 }}>ε</div>
             )}
 
             {[...input].map((ch, i) => {
@@ -246,37 +246,37 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
           border: `1px solid ${atEnd && result
             ? (result.accepted ? 'rgba(0,200,112,0.35)' : 'rgba(255,80,80,0.35)')
             : 'var(--border-subtle)'}`,
-          borderRadius: 10, padding: '10px 12px',
+          borderRadius: 10, padding: '12px 14px',
           transition: 'border-color 0.4s',
           boxShadow: atEnd && result?.accepted
             ? '0 0 16px rgba(0,200,112,0.15)'
             : atEnd && result ? '0 0 16px rgba(255,80,80,0.12)' : 'none',
         }}>
           {/* State bubble row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             {/* From state */}
             {prevState != null ? (
               <StateBubble label={prevState} color="#6e56cf" dim />
             ) : (
-              <div style={{ width: 46, height: 46 }} />
+              <div style={{ width: 50, height: 50 }} />
             )}
 
             {/* Transition arrow with symbol */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
               {activeChar != null ? (
                 <span style={{
-                  fontFamily: V('--font-mono'), fontSize: 13, fontWeight: 700,
+                  fontFamily: V('--font-mono'), fontSize: 14, fontWeight: 700,
                   color: '#ffb800',
                   background: 'rgba(255,184,0,0.15)',
-                  padding: '1px 8px', borderRadius: 4,
+                  padding: '2px 9px', borderRadius: 4,
                   border: '1px solid rgba(255,184,0,0.35)',
                   boxShadow: '0 0 8px rgba(255,184,0,0.2)',
                 }}>{activeChar}</span>
               ) : (
-                <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted') }}>start</span>
+                <span style={{ fontSize: 12, fontFamily: V('--font-mono'), color: V('--text-muted') }}>start</span>
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                <div style={{ width: 20, height: 2, background: 'var(--border)', borderRadius: 1 }} />
+                <div style={{ width: 22, height: 2, background: 'var(--border)', borderRadius: 1 }} />
                 <div style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `7px solid ${activeChar != null ? '#6e56cf' : 'var(--border)'}` }} />
               </div>
             </div>
@@ -297,14 +297,14 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
           </div>
 
           {/* Step counter + accept/reject badge */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-            <span style={{ fontSize: 9, fontFamily: V('--font-mono'), color: V('--text-muted') }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+            <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted') }}>
               Step <span style={{ color: V('--text-secondary'), fontWeight: 700 }}>{step}</span> / {path.length - 1}
             </span>
             {atEnd && result && (
               <span style={{
-                fontSize: 11, fontWeight: 700, fontFamily: V('--font-mono'),
-                padding: '2px 10px', borderRadius: 5,
+                fontSize: 12, fontWeight: 700, fontFamily: V('--font-mono'),
+                padding: '3px 12px', borderRadius: 5,
                 color: result.accepted ? '#00c870' : '#ff5555',
                 background: result.accepted ? 'rgba(0,200,112,0.12)' : 'rgba(255,80,80,0.1)',
                 border: `1px solid ${result.accepted ? 'rgba(0,200,112,0.35)' : 'rgba(255,80,80,0.3)'}`,
@@ -334,10 +334,10 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
           </div>
 
           {/* Controls */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', gap: 5 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', gap: 6 }}>
             <CtrlBtn onClick={stepBack} disabled={step <= 0} title="Back">
-              <span style={{ fontSize: 14 }}>⏮</span>
-              <span style={{ fontSize: 8 }}>BACK</span>
+              <span style={{ fontSize: 15 }}>⏮</span>
+              <span style={{ fontSize: 10 }}>BACK</span>
             </CtrlBtn>
 
             <CtrlBtn
@@ -345,26 +345,26 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
               active={isAuto} title={isAuto ? 'Pause' : 'Play'}
               activeStyle={{ background: 'linear-gradient(135deg,rgba(180,77,255,0.25),rgba(110,86,207,0.18))', borderColor: 'rgba(180,77,255,0.65)', color: '#d090ff' }}
             >
-              <span style={{ fontSize: 14 }}>{isAuto ? '⏸' : '▶'}</span>
-              <span style={{ fontSize: 8 }}>{isAuto ? 'PAUSE' : 'PLAY'}</span>
+              <span style={{ fontSize: 15 }}>{isAuto ? '⏸' : '▶'}</span>
+              <span style={{ fontSize: 10 }}>{isAuto ? 'PAUSE' : 'PLAY'}</span>
               {isAuto && (
                 <span style={{
                   position: 'absolute', top: 5, right: 5,
-                  width: 5, height: 5, borderRadius: '50%',
+                  width: 6, height: 6, borderRadius: '50%',
                   background: '#b44dff', animation: 'pulseReady 1s ease-in-out infinite',
                 }} />
               )}
             </CtrlBtn>
 
             <CtrlBtn onClick={stepFwd} disabled={atEnd} title="Next">
-              <span style={{ fontSize: 14 }}>⏭</span>
-              <span style={{ fontSize: 8 }}>NEXT</span>
+              <span style={{ fontSize: 15 }}>⏭</span>
+              <span style={{ fontSize: 10 }}>NEXT</span>
             </CtrlBtn>
 
             <CtrlBtn onClick={clear} title="Reset"
               style={{ background: 'rgba(255,60,60,0.07)', borderColor: 'rgba(255,80,80,0.3)', color: '#ff8080' }}>
-              <span style={{ fontSize: 14 }}>↺</span>
-              <span style={{ fontSize: 8 }}>RESET</span>
+              <span style={{ fontSize: 15 }}>↺</span>
+              <span style={{ fontSize: 10 }}>RESET</span>
             </CtrlBtn>
           </div>
         </div>
@@ -375,7 +375,7 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
         <div style={{ flexShrink: 0 }}>
           <div style={labelStyle}>Path Trace</div>
           <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: 3,
+            display: 'flex', flexWrap: 'wrap', gap: 4,
             alignItems: 'center', marginTop: 6,
           }}>
             {path.map((state, i) => {
@@ -386,10 +386,10 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
               const isFinalBad = i === path.length - 1 && atEnd && result && !result.accepted;
 
               return (
-                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{
-                    padding: '2px 7px', borderRadius: 5,
-                    fontSize: 10, fontFamily: V('--font-mono'), fontWeight: 700,
+                    padding: '3px 8px', borderRadius: 5,
+                    fontSize: 11, fontFamily: V('--font-mono'), fontWeight: 700,
                     transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
                     background: isFinalOk  ? 'rgba(0,200,112,0.15)'
                       : isFinalBad ? 'rgba(255,80,80,0.12)'
@@ -413,7 +413,7 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
                   }}>{state}</span>
                   {i < path.length - 1 && (
                     <span style={{
-                      fontFamily: V('--font-mono'), fontSize: 9,
+                      fontFamily: V('--font-mono'), fontSize: 10,
                       color: i < step ? '#ffb800' : V('--border'),
                       opacity: isFuture ? 0.2 : 1,
                       transition: 'color 0.3s ease',
@@ -432,15 +432,15 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
       {result && atEnd && (
         <div style={{
           flexShrink: 0,
-          display: 'flex', alignItems: 'flex-start', gap: 8,
-          padding: '9px 12px', borderRadius: 8,
-          fontFamily: V('--font-mono'), fontSize: 11,
+          display: 'flex', alignItems: 'flex-start', gap: 10,
+          padding: '10px 14px', borderRadius: 8,
+          fontFamily: V('--font-mono'), fontSize: 13,
           color: result.accepted ? '#00c870' : '#ff7070',
           background: result.accepted ? 'rgba(0,200,112,0.07)' : 'rgba(255,80,80,0.07)',
           border: `1px solid ${result.accepted ? 'rgba(0,200,112,0.28)' : 'rgba(255,80,80,0.25)'}`,
           boxShadow: result.accepted ? '0 0 14px rgba(0,200,112,0.1)' : '0 0 14px rgba(255,80,80,0.08)',
         }}>
-          <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1.2 }}>{result.accepted ? '✓' : '✗'}</span>
+          <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1.2 }}>{result.accepted ? '✓' : '✗'}</span>
           <span style={{ lineHeight: 1.5, wordBreak: 'break-word' }}>{result.reason}</span>
         </div>
       )}
@@ -450,10 +450,10 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 8,
-          color: V('--text-muted'), fontFamily: V('--font-mono'), fontSize: 11,
+          color: V('--text-muted'), fontFamily: V('--font-mono'), fontSize: 12,
           opacity: 0.6,
         }}>
-          <span style={{ fontSize: 28 }}>⚙</span>
+          <span style={{ fontSize: 32 }}>⚙</span>
           <span>{emptyMessage}</span>
         </div>
       )}
@@ -466,9 +466,9 @@ export default function StringTester({ dfa, onPathChange, emptyMessage = 'Build 
 function StateBubble({ label, color, glow, pulse, dim }) {
   return (
     <div style={{
-      width: 46, height: 46, borderRadius: '50%',
+      width: 50, height: 50, borderRadius: '50%',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+      fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
       color: dim ? 'rgba(255,255,255,0.4)' : '#fff',
       background: dim
         ? `${color}22`
@@ -498,7 +498,7 @@ function CtrlBtn({ children, onClick, disabled, active, activeStyle, style, titl
     position: 'relative',
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    gap: 2, padding: '6px 4px', borderRadius: 8,
+    gap: 2, padding: '7px 4px', borderRadius: 8,
     border: active ? '1px solid rgba(110,86,207,0.6)' : '1px solid var(--border)',
     background: active ? 'rgba(110,86,207,0.2)' : 'var(--bg-elevated)',
     color: disabled ? 'var(--text-muted)' : active ? '#b09af0' : 'var(--text-secondary)',
@@ -518,15 +518,15 @@ function CtrlBtn({ children, onClick, disabled, active, activeStyle, style, titl
 
 // ── Shared ─────────────────────────────────────────────────────────────────
 const labelStyle = {
-  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-  letterSpacing: '0.1em', color: 'var(--text-muted)',
+  fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+  letterSpacing: '0.08em', color: 'var(--text-muted)',
   fontFamily: 'var(--font-mono)',
 };
 
 const tapeCell = {
-  width: 30, height: 30, borderRadius: 6, flexShrink: 0,
+  width: 34, height: 34, borderRadius: 6, flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontFamily: 'var(--font-mono)', fontSize: 13,
+  fontFamily: 'var(--font-mono)', fontSize: 14,
 };
 
 

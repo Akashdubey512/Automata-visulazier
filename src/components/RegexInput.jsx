@@ -50,16 +50,16 @@ function Divider() {
 
 function SectionHeader({ label, open, onToggle, action }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 4px', cursor: 'pointer' }} onClick={onToggle}>
+    <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px 5px', cursor: 'pointer' }} onClick={onToggle}>
       <span style={{
-        flex: 1, fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-        letterSpacing: '0.1em', fontFamily: V('--font-mono'), color: V('--text-muted'),
+        flex: 1, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+        letterSpacing: '0.08em', fontFamily: V('--font-mono'), color: V('--text-muted'),
       }}>
         {label}
       </span>
       {action}
       <span style={{
-        fontSize: 8, color: V('--text-muted'), marginLeft: 6,
+        fontSize: 10, color: V('--text-muted'), marginLeft: 6,
         transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
         transition: 'transform 0.2s',
         display: 'inline-block',
@@ -200,10 +200,10 @@ export default function RegexInput({
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{
-            fontSize: 11, fontWeight: 700, fontFamily: V('--font-mono'),
+            fontSize: 13, fontWeight: 700, fontFamily: V('--font-mono'),
             color: V('--text-secondary'), textTransform: 'uppercase', letterSpacing: '0.08em',
           }}>Regex Input</span>
-          <span style={{ fontSize: 10, fontFamily: V('--font-mono'), color: V('--text-muted') }}>
+          <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted') }}>
             Thompson's
           </span>
         </div>
@@ -216,13 +216,13 @@ export default function RegexInput({
             return (
               <div key={s.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <div style={{
-                  height: 3, borderRadius: 2,
+                  height: 4, borderRadius: 2,
                   background: done ? s.color : current ? s.color + '55' : V('--bg-overlay'),
                   boxShadow: done ? `0 0 6px ${s.color}66` : 'none',
                   transition: 'background 0.4s, box-shadow 0.4s',
                 }} />
                 <span style={{
-                  fontSize: 8, fontFamily: V('--font-mono'), textAlign: 'center',
+                  fontSize: 10, fontFamily: V('--font-mono'), textAlign: 'center',
                   color: done || current ? s.color : V('--border'),
                   transition: 'color 0.4s',
                 }}>{s.label}</span>
@@ -252,8 +252,8 @@ export default function RegexInput({
                 background: V('--bg-elevated'),
                 border: `1px solid ${error ? '#7f1d1d' : V('--border')}`,
                 borderRadius: 8,
-                padding: '9px 58px 9px 11px',
-                fontFamily: V('--font-mono'), fontSize: 13,
+                padding: '10px 62px 10px 12px',
+                fontFamily: V('--font-mono'), fontSize: 14,
                 color: V('--text-primary'),
                 outline: 'none', transition: 'border-color 0.15s',
               }}
@@ -278,18 +278,18 @@ export default function RegexInput({
 
           {/* Error */}
           {error && (
-            <p style={{ margin: '5px 0 0', fontSize: 11, fontFamily: V('--font-mono'), color: '#f87171', display: 'flex', gap: 5, alignItems: 'flex-start' }}>
+            <p style={{ margin: '6px 0 0', fontSize: 12, fontFamily: V('--font-mono'), color: '#f87171', display: 'flex', gap: 5, alignItems: 'flex-start' }}>
               <span>⚠</span><span>{error}</span>
             </p>
           )}
 
           {/* Alphabet + length */}
           {regex && !error && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
-              <span style={{ fontSize: 10, fontFamily: V('--font-mono'), color: V('--text-muted') }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+              <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted') }}>
                 Σ = {'{' + (alphabet.length ? alphabet.join(', ') : '∅') + '}'}
               </span>
-              <span style={{ fontSize: 10, fontFamily: V('--font-mono'), color: V('--border') }}>
+              <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--border') }}>
                 {regex.length} ch
               </span>
             </div>
@@ -298,10 +298,10 @@ export default function RegexInput({
 
         {/* ── Operator palette ──────────────────────────────────────── */}
         <div style={{ padding: '10px 16px 4px' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: V('--font-mono'), color: V('--text-muted'), marginBottom: 5 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: V('--font-mono'), color: V('--text-muted'), marginBottom: 6 }}>
             Operators
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {OPS.map((op) => (
               <button key={op.label} onClick={() => insertOp(op)} title={op.title}
                 style={opChipStyle}
@@ -340,7 +340,7 @@ export default function RegexInput({
             <button
               onClick={e => { e.stopPropagation(); clearHistoryLS(); setHistory([]); }}
               title="Clear history"
-              style={{ fontSize: 9, fontFamily: V('--font-mono'), color: V('--border'), background: 'none', border: 'none', cursor: 'pointer', padding: '0 6px', transition: 'color 0.15s' }}
+              style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--border'), background: 'none', border: 'none', cursor: 'pointer', padding: '0 6px', transition: 'color 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
               onMouseLeave={e => e.currentTarget.style.color = V('--border')}
             >clear</button>
@@ -349,21 +349,21 @@ export default function RegexInput({
         {showHistory && (
           <div style={{ padding: '2px 16px 8px' }}>
             {history.length === 0 ? (
-              <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--border') }}>No history yet</span>
+              <span style={{ fontSize: 12, fontFamily: V('--font-mono'), color: V('--border') }}>No history yet</span>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {history.map((r, i) => (
                   <button key={i} onClick={() => load(r)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '5px 8px', borderRadius: 5, cursor: 'pointer', textAlign: 'left',
+                      padding: '6px 8px', borderRadius: 5, cursor: 'pointer', textAlign: 'left',
                       background: 'transparent', border: '1px solid transparent', transition: 'all 0.12s',
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = V('--bg-elevated'); e.currentTarget.style.borderColor = V('--border-subtle'); }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
                   >
-                    <span style={{ fontSize: 9, color: V('--border'), fontFamily: V('--font-mono'), minWidth: 10 }}>{i + 1}</span>
-                    <code style={{ fontSize: 12, fontFamily: V('--font-mono'), color: V('--text-secondary'), flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r}</code>
+                    <span style={{ fontSize: 11, color: V('--border'), fontFamily: V('--font-mono'), minWidth: 12 }}>{i + 1}</span>
+                    <code style={{ fontSize: 13, fontFamily: V('--font-mono'), color: V('--text-secondary'), flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r}</code>
                   </button>
                 ))}
               </div>
@@ -392,11 +392,11 @@ export default function RegexInput({
               ].map(([op, desc], i, arr) => (
                 <div key={op} style={{
                   display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '5px 10px',
+                  padding: '6px 10px',
                   borderBottom: i < arr.length - 1 ? `1px solid ${V('--border-subtle')}` : 'none',
                 }}>
-                  <code style={{ fontSize: 11, fontFamily: V('--font-mono'), fontWeight: 700, color: '#818cf8', width: 46, flexShrink: 0 }}>{op}</code>
-                  <span style={{ fontSize: 10, color: V('--text-muted'), fontFamily: V('--font-body') }}>{desc}</span>
+                  <code style={{ fontSize: 13, fontFamily: V('--font-mono'), fontWeight: 700, color: '#818cf8', width: 48, flexShrink: 0 }}>{op}</code>
+                  <span style={{ fontSize: 12, color: V('--text-muted'), fontFamily: V('--font-body') }}>{desc}</span>
                 </div>
               ))}
             </div>
@@ -423,13 +423,13 @@ export default function RegexInput({
           return (
             <div style={{ padding: '8px 16px 6px' }}>
               <div style={{
-                fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-                letterSpacing: '0.1em', fontFamily: 'var(--font-mono)',
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.08em', fontFamily: 'var(--font-mono)',
                 color: 'var(--text-muted)', marginBottom: 6,
               }}>Canvas View</div>
 
               {/* Stage chips row */}
-              <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
                 {available.map(s => {
                   const isActive = s.id === activeStage;
                   const colors   = { 'enfa': '#b44dff', 'nfa': '#6e56cf', 'dfa': '#00c870', 'minDfa': '#ffb800' };
@@ -438,8 +438,8 @@ export default function RegexInput({
                     <button key={s.id} onClick={() => onStageChange?.(s.id)}
                       title={`View ${s.label}`}
                       style={{
-                        flex: 1, padding: '4px 2px', borderRadius: 5,
-                        fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700,
+                        flex: 1, padding: '5px 4px', borderRadius: 5,
+                        fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 700,
                         cursor: 'pointer', transition: 'all 0.15s',
                         background: isActive ? `${c}22` : 'var(--bg-elevated)',
                         border: `1px solid ${isActive ? c : 'var(--border-subtle)'}`,
@@ -458,10 +458,10 @@ export default function RegexInput({
                   disabled={!hasPrev}
                   onClick={() => hasPrev && onStageChange?.(available[idx - 1].id)}
                   style={{
-                    flex: 1, padding: '6px 0', borderRadius: 6,
+                    flex: 1, padding: '7px 0', borderRadius: 6,
                     background: hasPrev ? 'var(--bg-elevated)' : 'transparent',
                     border: `1px solid ${hasPrev ? 'var(--border)' : 'var(--border-subtle)'}`,
-                    fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+                    fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
                     color: hasPrev ? 'var(--text-secondary)' : 'var(--border)',
                     cursor: hasPrev ? 'pointer' : 'not-allowed',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
@@ -476,10 +476,10 @@ export default function RegexInput({
                   disabled={!hasNext}
                   onClick={() => hasNext && onStageChange?.(available[idx + 1].id)}
                   style={{
-                    flex: 1, padding: '6px 0', borderRadius: 6,
+                    flex: 1, padding: '7px 0', borderRadius: 6,
                     background: hasNext ? 'var(--bg-elevated)' : 'transparent',
                     border: `1px solid ${hasNext ? 'var(--border)' : 'var(--border-subtle)'}`,
-                    fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+                    fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
                     color: hasNext ? 'var(--text-secondary)' : 'var(--border)',
                     cursor: hasNext ? 'pointer' : 'not-allowed',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
@@ -540,7 +540,7 @@ export default function RegexInput({
             padding: '8px 0', borderRadius: 8, textAlign: 'center',
             background: 'rgba(0,255,136,0.06)',
             border: '1px solid rgba(0,255,136,0.2)',
-            fontSize: 12, fontFamily: V('--font-mono'),
+            fontSize: 13, fontFamily: V('--font-mono'),
             fontWeight: 700, color: '#00c870',
           }}>
             ✓ Pipeline complete
@@ -554,18 +554,18 @@ export default function RegexInput({
 
 // ── Shared micro-styles ───────────────────────────────────────────────────
 const iconBtnStyle = {
-  width: 22, height: 22, borderRadius: 4,
+  width: 24, height: 24, borderRadius: 5,
   background: 'var(--bg-overlay)', border: 'none',
-  color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11,
+  color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   transition: 'all 0.15s',
   flexShrink: 0,
 };
 
 const opChipStyle = {
-  padding: '3px 9px', borderRadius: 5,
+  padding: '4px 10px', borderRadius: 5,
   background: 'var(--bg-elevated)',
   border: '1px solid var(--border)',
-  fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700,
+  fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
   color: '#818cf8', cursor: 'pointer', transition: 'all 0.14s',
 };

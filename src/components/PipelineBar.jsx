@@ -14,7 +14,7 @@ export default function PipelineBar({ stages, activeStage, onStageClick, readySt
               onClick={() => stage.available && onStageClick(stage.id)}
               disabled={!stage.available}
               title={!stage.available ? 'Complete previous steps first' : stage.label}
-              className={`relative flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all whitespace-nowrap ${
+              className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-md text-sm font-mono font-semibold transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/50'
                   : stage.done
@@ -25,7 +25,7 @@ export default function PipelineBar({ stages, activeStage, onStageClick, readySt
               }`}
             >
               {/* Step badge */}
-              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] leading-none font-bold ${
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs leading-none font-bold ${
                 stage.done
                   ? 'bg-emerald-600 text-white'
                   : isActive
@@ -40,7 +40,7 @@ export default function PipelineBar({ stages, activeStage, onStageClick, readySt
               {/* Pulsing "ready" dot — indicates a new result is waiting */}
               {isReady && !isActive && (
                 <span
-                  className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400"
+                  className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400"
                   style={{ animation: 'pulseReady 1.5s ease-in-out infinite' }}
                 />
               )}
@@ -48,7 +48,7 @@ export default function PipelineBar({ stages, activeStage, onStageClick, readySt
 
             {/* Arrow connector */}
             {i < stages.length - 1 && (
-              <div className={`flex items-center mx-1.5 text-xs font-bold select-none transition-colors ${
+              <div className={`flex items-center mx-1.5 text-sm font-bold select-none transition-colors ${
                 stage.done ? 'text-emerald-700' : 'text-slate-700'
               }`}>
                 →

@@ -58,17 +58,17 @@ export default function TransitionTablePanel({ automaton, type, label, onClose, 
       icon="⊞"
       onClose={onClose}
       defaultPosition={defaultPosition || { x: 200, y: 80 }}
-      width={460}
-      height={400}
+      width={520}
+      height={420}
     >
-      <div style={{ overflow: 'auto', height: '100%', padding: '10px 14px' }}>
+      <div style={{ overflow: 'auto', height: '100%', padding: '12px 16px' }}>
         <table style={{
           width: '100%', borderCollapse: 'collapse',
-          fontFamily: 'var(--font-mono)', fontSize: 11,
+          fontFamily: 'var(--font-mono)', fontSize: 13,
         }}>
           <thead>
             <tr>
-              <th style={{ ...th, textAlign: 'left', color: 'var(--text-muted)', width: 80 }}>
+              <th style={{ ...th, textAlign: 'left', color: 'var(--text-muted)', width: 90 }}>
                 δ
               </th>
               {cols.map(sym => (
@@ -98,12 +98,12 @@ export default function TransitionTablePanel({ automaton, type, label, onClose, 
                     fontWeight: 700,
                     color: isDead ? 'var(--text-muted)' : 'var(--text-secondary)',
                   }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       {isStart && (
-                        <span style={{ color: '#6e56cf', fontSize: 10 }}>→</span>
+                        <span style={{ color: '#6e56cf', fontSize: 12 }}>→</span>
                       )}
                       {isAccept && (
-                        <span style={{ color: '#00c870', fontSize: 10 }}>*</span>
+                        <span style={{ color: '#00c870', fontSize: 12 }}>*</span>
                       )}
                       <span style={{
                         color: isAccept ? '#00e080' : isStart ? '#9080d0' : 'var(--text-secondary)',
@@ -134,8 +134,8 @@ export default function TransitionTablePanel({ automaton, type, label, onClose, 
 
         {/* Legend */}
         <div style={{
-          marginTop: 12, display: 'flex', gap: 16,
-          fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)',
+          marginTop: 14, display: 'flex', gap: 16,
+          fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)',
         }}>
           <span><span style={{ color: '#6e56cf' }}>→</span> start state</span>
           <span><span style={{ color: '#00c870' }}>*</span> accept state</span>
@@ -150,13 +150,13 @@ export default function TransitionTablePanel({ automaton, type, label, onClose, 
 }
 
 const th = {
-  padding: '7px 10px', textAlign: 'center',
+  padding: '8px 12px', textAlign: 'center',
   borderBottom: '1px solid var(--border)',
   fontWeight: 700, letterSpacing: '0.04em',
   background: 'rgba(13,17,23,0.5)',
   position: 'sticky', top: 0, zIndex: 1,
 };
 const td = {
-  padding: '5px 10px', textAlign: 'center',
+  padding: '6px 12px', textAlign: 'center',
   fontSize: 11,
 };

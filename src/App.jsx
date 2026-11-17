@@ -27,6 +27,8 @@ const INITIAL_NFA = normalizeNfaAutomaton({
   epsilon: { q0: [], q1: [], q2: [] },
 });
 
+const SIDEBAR_WIDTH = 320;
+
 export default function App() {
   // ── Input mode ───────────────────────────────────────────────────────
   const [inputMode, setInputMode] = useState('regex');
@@ -309,7 +311,7 @@ export default function App() {
 
       {/* ── Top Stage Tabs (thin bar) ─────────────────────────────────── */}
       <div style={{
-        flexShrink: 0, height: 40,
+        flexShrink: 0, height: 44,
         display: 'flex', alignItems: 'center',
         background: 'var(--bg-surface)',
         borderBottom: '1px solid var(--border-subtle)',
@@ -321,24 +323,24 @@ export default function App() {
           onClick={() => setSidebarOpen(o => !o)}
           title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           style={{
-            width: sidebarOpen ? 255 : 44,
+            width: sidebarOpen ? SIDEBAR_WIDTH : 44,
             flexShrink: 0,
             height: '100%',
             borderRight: '1px solid var(--border-subtle)',
             display: 'flex', alignItems: 'center',
-            padding: '0 12px',
+            padding: '0 14px',
             gap: 8,
             background: 'rgba(255,255,255,0.02)',
             cursor: 'pointer',
             transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
           }}
         >
-          <span style={{ fontSize: 14, color: 'var(--text-muted)', flexShrink: 0, lineHeight: 1 }}>
+          <span style={{ fontSize: 15, color: 'var(--text-muted)', flexShrink: 0, lineHeight: 1 }}>
             {sidebarOpen ? '◀' : '▶'}
           </span>
           {sidebarOpen && (
             <span style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
+              fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
               color: 'var(--text-muted)', textTransform: 'uppercase',
               fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap',
             }}>
@@ -366,9 +368,9 @@ export default function App() {
                   disabled={!stage.available}
                   style={{
                     position: 'relative',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '0 14px', height: 40,
-                    fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    padding: '0 16px', height: 44,
+                    fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600,
                     cursor: stage.available ? 'pointer' : 'not-allowed',
                     opacity: stage.available ? 1 : 0.3,
                     color: isActive ? c.active : stage.done ? 'var(--text-secondary)' : 'var(--text-muted)',
@@ -380,9 +382,9 @@ export default function App() {
                 >
                   {/* Done check or step number */}
                   <span style={{
-                    width: 16, height: 16, borderRadius: '50%',
+                    width: 18, height: 18, borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 9, fontWeight: 700,
+                    fontSize: 11, fontWeight: 700,
                     background: stage.done ? c.badge : isActive ? c.active : 'var(--bg-overlay)',
                     color: stage.done || isActive ? '#fff' : 'var(--text-muted)',
                     boxShadow: isActive ? `0 0 8px ${c.active}66` : 'none',
@@ -396,7 +398,7 @@ export default function App() {
                   {isReady && !isActive && (
                     <span style={{
                       position: 'absolute', top: 6, right: 4,
-                      width: 6, height: 6, borderRadius: '50%',
+                      width: 7, height: 7, borderRadius: '50%',
                       background: '#00ff88',
                       animation: 'pulseReady 1.5s ease-in-out infinite',
                     }} />
@@ -404,7 +406,7 @@ export default function App() {
                 </button>
 
                 {i < pipelineStages.length - 1 && (
-                  <span style={{ color: 'var(--border)', fontSize: 10, margin: '0 2px', userSelect: 'none' }}>→</span>
+                  <span style={{ color: 'var(--border)', fontSize: 12, margin: '0 4px', userSelect: 'none' }}>→</span>
                 )}
               </div>
             );
@@ -415,13 +417,13 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           {/* Stats chip */}
           {activeStage === 'dfa' && dfaStats && (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', paddingRight: 8 }}>
-              <span style={{ color: '#38bdf8', fontWeight: 700 }}>{dfaStats.states}</span> states·
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', paddingRight: 12 }}>
+              <span style={{ color: '#38bdf8', fontWeight: 700 }}>{dfaStats.states}</span> states ·{' '}
               <span style={{ color: '#34d399', fontWeight: 700 }}>{dfaStats.accept}</span> accept
             </span>
           )}
           {activeStage === 'minDfa' && minStats && (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', paddingRight: 8 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', paddingRight: 12 }}>
               <span style={{ color: 'var(--text-secondary)' }}>{minStats.original}</span>
               {' → '}
               <span style={{ color: '#38bdf8', fontWeight: 700 }}>{minStats.minimized}</span> states
@@ -433,12 +435,12 @@ export default function App() {
             onClick={() => setRightSidebarOpen(o => !o)}
             title={rightSidebarOpen ? 'Collapse tools' : 'Expand tools'}
             style={{
-              width: rightSidebarOpen ? 255 : 44,
+              width: rightSidebarOpen ? SIDEBAR_WIDTH : 44,
               flexShrink: 0,
-              height: 40,
+              height: 44,
               borderLeft: '1px solid var(--border-subtle)',
               display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-              padding: '0 12px',
+              padding: '0 14px',
               gap: 8,
               background: 'rgba(255,255,255,0.02)',
               cursor: 'pointer',
@@ -447,12 +449,12 @@ export default function App() {
           >
             {rightSidebarOpen && (
               <span style={{
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
+                fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
                 color: 'var(--text-muted)', textTransform: 'uppercase',
                 fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap',
               }}>Tools</span>
             )}
-            <span style={{ fontSize: 14, color: 'var(--text-muted)', flexShrink: 0, lineHeight: 1 }}>
+            <span style={{ fontSize: 15, color: 'var(--text-muted)', flexShrink: 0, lineHeight: 1 }}>
               {rightSidebarOpen ? '▶' : '◀'}
             </span>
           </button>
@@ -464,7 +466,7 @@ export default function App() {
 
         {/* ── Left Sidebar ─────────────────────────────────────────────── */}
         <div style={{
-          width: sidebarOpen ? 255 : 0,
+          width: sidebarOpen ? SIDEBAR_WIDTH : 0,
           flexShrink: 0,
           overflow: 'hidden',
           transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
@@ -472,17 +474,17 @@ export default function App() {
           borderRight: '1px solid var(--border-subtle)',
           display: 'flex', flexDirection: 'column',
         }}>
-          <div style={{ width: 255, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: SIDEBAR_WIDTH, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* Title block */}
             <div style={{
-              padding: '16px 16px 12px',
+              padding: '16px 16px 14px',
               borderBottom: '1px solid var(--border-subtle)',
               flexShrink: 0,
             }}>
               <h1 style={{
                 margin: 0,
-                fontSize: 18, fontWeight: 700,
+                fontSize: 20, fontWeight: 700,
                 fontFamily: 'var(--font-heading)',
                 color: 'var(--text-primary)',
                 letterSpacing: '-0.02em',
@@ -490,8 +492,8 @@ export default function App() {
                 Automata Lab
               </h1>
               <p style={{
-                margin: '2px 0 0',
-                fontSize: 10, fontFamily: 'var(--font-mono)',
+                margin: '4px 0 0',
+                fontSize: 12, fontFamily: 'var(--font-mono)',
                 color: 'var(--text-muted)',
               }}>
                 Regex → ε-NFA → NFA → DFA → Min-DFA
@@ -499,7 +501,7 @@ export default function App() {
 
               {/* Mode toggle */}
               <div style={{
-                display: 'flex', gap: 4, marginTop: 10,
+                display: 'flex', gap: 6, marginTop: 12,
                 background: 'var(--bg-elevated)', borderRadius: 8,
                 padding: 3, border: '1px solid var(--border-subtle)',
               }}>
@@ -515,8 +517,8 @@ export default function App() {
                       else if (enfa) setActiveStage('enfa');
                     }}
                     style={{
-                      flex: 1, padding: '6px 0', borderRadius: 6,
-                      fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 600,
+                      flex: 1, padding: '7px 0', borderRadius: 6,
+                      fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600,
                       background: inputMode === m.id ? 'var(--accent)' : 'transparent',
                       color: inputMode === m.id ? '#fff' : 'var(--text-muted)',
                       cursor: 'pointer',
@@ -576,11 +578,11 @@ export default function App() {
           {/* ── Stage label (bottom-left of canvas) ─────────────────── */}
           <div style={{
             position: 'absolute', bottom: 16, left: 16,
-            fontFamily: 'var(--font-mono)', fontSize: 10,
+            fontFamily: 'var(--font-mono)', fontSize: 12,
             color: 'var(--text-muted)',
             background: 'rgba(13,17,23,0.7)',
             backdropFilter: 'blur(8px)',
-            padding: '4px 10px', borderRadius: 6,
+            padding: '5px 12px', borderRadius: 6,
             border: '1px solid var(--border-subtle)',
             zIndex: 5, userSelect: 'none',
             letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -591,7 +593,7 @@ export default function App() {
 
         {/* ── Right Sidebar ──────────────────────────────────────── */}
         <div style={{
-          width: rightSidebarOpen ? 255 : 0,
+          width: rightSidebarOpen ? SIDEBAR_WIDTH : 0,
           flexShrink: 0,
           overflow: 'hidden',
           transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
@@ -599,7 +601,7 @@ export default function App() {
           borderLeft: '1px solid var(--border-subtle)',
           display: 'flex', flexDirection: 'column',
         }}>
-          <div style={{ width: 255, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: SIDEBAR_WIDTH, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* ── Tab bar ─────────────────────────────────────────── */}
             <div style={{
@@ -615,10 +617,10 @@ export default function App() {
               ].map(tab => (
                 <button key={tab.id} onClick={() => setRightTab(tab.id)}
                   style={{
-                    flex: 1, padding: '9px 4px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                    flex: 1, padding: '10px 4px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     fontFamily: 'var(--font-mono)', fontWeight: 700,
-                    fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
                     cursor: 'pointer',
                     color: rightTab === tab.id ? '#38bdf8' : 'var(--text-muted)',
                     borderBottom: rightTab === tab.id ? '2px solid #38bdf8' : '2px solid transparent',
@@ -626,7 +628,7 @@ export default function App() {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <span style={{ fontSize: 14 }}>{tab.icon}</span>
+                  <span style={{ fontSize: 16 }}>{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -660,9 +662,9 @@ export default function App() {
                         onClick={() => setActiveStep(activeSteps.length - 1)}>⏭</SimBtn>
                       <SimBtn title="Reset" onClick={simReset}>&#8634;</SimBtn>
                       <span style={{
-                        fontFamily: 'var(--font-mono)', fontSize: 10,
+                        fontFamily: 'var(--font-mono)', fontSize: 12,
                         color: 'var(--text-muted)', marginLeft: 'auto',
-                        minWidth: 36, textAlign: 'right',
+                        minWidth: 42, textAlign: 'right',
                       }}>
                         {activeStepIdx >= 0 ? `${activeStepIdx + 1}/${activeSteps.length}` : `—/${activeSteps.length}`}
                       </span>
@@ -709,8 +711,8 @@ export default function App() {
                   />
                 ) : (
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', flexDirection:'column', gap:8, padding:20 }}>
-                    <span style={{ fontSize: 32, opacity: 0.25 }}>∅</span>
-                    <p style={{ fontSize: 11, fontFamily:'var(--font-mono)', color:'var(--text-muted)', textAlign:'center', margin:0, lineHeight: 1.6 }}>
+                    <span style={{ fontSize: 36, opacity: 0.25 }}>∅</span>
+                    <p style={{ fontSize: 13, fontFamily:'var(--font-mono)', color:'var(--text-muted)', textAlign:'center', margin:0, lineHeight: 1.6 }}>
                       No automaton built<br/>for this stage yet
                     </p>
                   </div>
@@ -745,12 +747,12 @@ function PanelToggle({ label, icon, active, onClick }) {
     <button
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 5,
-        padding: '5px 11px',
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '6px 12px',
         background: active ? 'rgba(110,86,207,0.2)' : 'rgba(13,17,23,0.88)',
         border: `1px solid ${active ? 'rgba(110,86,207,0.7)' : 'var(--border)'}`,
         borderRadius: 8,
-        fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+        fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600,
         color: active ? '#b09af0' : 'var(--text-secondary)',
         cursor: 'pointer',
         backdropFilter: 'blur(12px)',
@@ -758,7 +760,7 @@ function PanelToggle({ label, icon, active, onClick }) {
         transition: 'all 0.18s ease',
       }}
     >
-      <span style={{ fontSize: 12 }}>{icon}</span>
+      <span style={{ fontSize: 14 }}>{icon}</span>
       {label}
     </button>
   );
@@ -799,13 +801,13 @@ function EmptyCanvas({ activeStage, inputMode }) {
         borderRadius: 16, border: '1px solid var(--border-subtle)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
       }}>
-        <span style={{ fontSize: 40, opacity: 0.5 }}>{msg.icon}</span>
+        <span style={{ fontSize: 44, opacity: 0.5 }}>{msg.icon}</span>
         <p style={{
-          margin: 0, fontSize: 14, fontFamily: 'var(--font-body)',
+          margin: 0, fontSize: 16, fontFamily: 'var(--font-body)',
           color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'center',
         }}>{msg.text}</p>
         <p style={{
-          margin: 0, fontSize: 11, fontFamily: 'var(--font-mono)',
+          margin: 0, fontSize: 12, fontFamily: 'var(--font-mono)',
           color: 'var(--text-muted)',
         }}>{msg.sub}</p>
       </div>
@@ -839,7 +841,7 @@ function RightSidebarTable({ automaton, type }) {
   const hdrColor   = typeColors[type] || '#00c870';
 
   return (
-    <div style={{ overflowY: 'auto', overflowX: 'hidden', height: '100%', padding: '8px 10px' }}>
+    <div style={{ overflowY: 'auto', overflowX: 'hidden', height: '100%', padding: '10px 12px' }}>
       {states.map(state => {
         const isStart  = state === startState;
         const isAccept = acceptStates.includes(state);
@@ -853,15 +855,15 @@ function RightSidebarTable({ automaton, type }) {
           }}>
             {/* State header */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 8px',
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 10px',
               borderBottom: '1px solid var(--border-subtle)',
               background: 'rgba(255,255,255,0.02)',
             }}>
-              {isStart  && <span style={{ color: '#6e56cf', fontSize: 10, flexShrink: 0 }}>→</span>}
-              {isAccept && <span style={{ color: '#00c870', fontSize: 10, flexShrink: 0 }}>*</span>}
+              {isStart  && <span style={{ color: '#6e56cf', fontSize: 12, flexShrink: 0 }}>→</span>}
+              {isAccept && <span style={{ color: '#00c870', fontSize: 12, flexShrink: 0 }}>*</span>}
               <span style={{
-                fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 11,
+                fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13,
                 color: isDead ? 'var(--text-muted)' : isAccept ? '#00e080' : isStart ? '#9080d0' : 'var(--text-secondary)',
                 wordBreak: 'break-all',
               }}>
@@ -874,21 +876,21 @@ function RightSidebarTable({ automaton, type }) {
               const isEmpty = val === '∅';
               return (
                 <div key={sym} style={{
-                  display: 'flex', alignItems: 'flex-start', padding: '3px 8px', gap: 6,
+                  display: 'flex', alignItems: 'flex-start', padding: '4px 10px', gap: 8,
                   borderBottom: si < cols.length - 1 ? '1px solid rgba(33,38,45,0.6)' : 'none',
                 }}>
                   <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-                    flexShrink: 0, minWidth: 12,
+                    fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700,
+                    flexShrink: 0, minWidth: 14,
                     color: sym === 'ε' ? '#b44dff' : hdrColor,
                   }}>{sym}</span>
                   <span style={{
-                    color: 'var(--border)', fontSize: 10, flexShrink: 0,
+                    color: 'var(--border)', fontSize: 12, flexShrink: 0,
                     borderLeft: '1px solid var(--border-subtle)',
                     marginLeft: 2, marginRight: 4, alignSelf: 'stretch',
                   }} />
                   <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 10,
+                    fontFamily: 'var(--font-mono)', fontSize: 12,
                     color: isEmpty ? 'var(--text-muted)' : hdrColor,
                     fontWeight: isEmpty ? 400 : 600,
                     wordBreak: 'break-word', lineHeight: 1.5,
@@ -900,8 +902,8 @@ function RightSidebarTable({ automaton, type }) {
         );
       })}
       <div style={{
-        marginTop: 6, fontSize: 9, fontFamily: 'var(--font-mono)',
-        color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: 8,
+        marginTop: 8, fontSize: 11, fontFamily: 'var(--font-mono)',
+        color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: 10,
       }}>
         <span><span style={{ color: '#6e56cf' }}>→</span> start</span>
         <span><span style={{ color: '#00c870' }}>*</span> accept</span>

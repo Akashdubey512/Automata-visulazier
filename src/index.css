@@ -46,6 +46,7 @@
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: 14px;
   background: var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -194,13 +195,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   border: 1px solid rgba(48,54,61,0.7);
   background: rgba(22,27,34,0.9);
   color: #8b949e;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.15s ease;
   backdrop-filter: blur(8px);
@@ -226,10 +227,10 @@ body {
 /* ── Pipeline sidebar action buttons ───────────────────────────────── */
 .pipeline-action-btn {
   width: 100%;
-  padding: 9px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;

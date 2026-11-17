@@ -159,7 +159,7 @@ export default function CustomNode({ data }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: label.length > 6 ? 9 : label.length > 4 ? 10 : 12,
+            fontSize: label.length > 7 ? 11 : label.length > 4 ? 12 : 14,
             fontFamily: '"JetBrains Mono", monospace',
             fontWeight: 700,
             color,

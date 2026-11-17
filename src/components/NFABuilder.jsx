@@ -70,7 +70,7 @@ function SectionHeader({ label, open, onToggle, count }) {
         display: 'flex',
         alignItems: 'center',
         width: '100%',
-        padding: '7px 16px 5px',
+        padding: '8px 16px 6px',
         cursor: 'pointer',
         background: 'none',
         border: 'none',
@@ -80,10 +80,10 @@ function SectionHeader({ label, open, onToggle, count }) {
       <span
         style={{
           flex: 1,
-          fontSize: 9,
+          fontSize: 11,
           fontWeight: 700,
           textTransform: 'uppercase',
-          letterSpacing: '0.1em',
+          letterSpacing: '0.08em',
           fontFamily: V('--font-mono'),
           color: V('--text-muted'),
         }}
@@ -93,10 +93,10 @@ function SectionHeader({ label, open, onToggle, count }) {
           <span
             style={{
               marginLeft: 6,
-              fontSize: 8,
+              fontSize: 10,
               background: V('--bg-overlay'),
               color: V('--text-muted'),
-              padding: '1px 5px',
+              padding: '1px 6px',
               borderRadius: 8,
               border: `1px solid ${V('--border-subtle')}`,
             }}
@@ -107,7 +107,7 @@ function SectionHeader({ label, open, onToggle, count }) {
       </span>
       <span
         style={{
-          fontSize: 8,
+          fontSize: 10,
           color: V('--text-muted'),
           transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
           transition: 'transform 0.2s',
@@ -152,10 +152,10 @@ function TransitionCell({ value, onCommit }) {
         boxSizing: 'border-box',
         background: V('--bg-overlay'),
         border: `1px solid ${V('--border-subtle')}`,
-        borderRadius: 4,
-        padding: '3px 4px',
+        borderRadius: 5,
+        padding: '4px 6px',
         fontFamily: V('--font-mono'),
-        fontSize: 10,
+        fontSize: 12,
         color: V('--text-secondary'),
         textAlign: 'center',
         outline: 'none',
@@ -198,10 +198,10 @@ function PipeBtn({ children, onClick, cls = 'indigo' }) {
       onClick={onClick}
       style={{
         width: '100%',
-        padding: '9px 12px',
+        padding: '10px 14px',
         borderRadius: 8,
         fontFamily: V('--font-mono'),
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: 700,
         letterSpacing: '0.02em',
         cursor: 'pointer',
@@ -382,10 +382,10 @@ export default function NFABuilder({
           borderBottom: `1px solid ${V('--border-subtle')}`,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 700,
               fontFamily: V('--font-mono'),
               color: V('--text-secondary'),
@@ -395,7 +395,7 @@ export default function NFABuilder({
           >
             NFA Builder
           </span>
-          <span style={{ fontSize: 10, fontFamily: V('--font-mono'), color: V('--text-muted') }}>Manual</span>
+          <span style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted') }}>Manual</span>
         </div>
 
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -411,9 +411,9 @@ export default function NFABuilder({
               <span
                 key={index}
                 style={{
-                  fontSize: 9,
+                  fontSize: 11,
                   fontFamily: V('--font-mono'),
-                  padding: '1px 6px',
+                  padding: '2px 8px',
                   borderRadius: 4,
                   background: V('--bg-overlay'),
                   border: `1px solid ${V('--border-subtle')}`,
@@ -433,12 +433,12 @@ export default function NFABuilder({
               background: V('--bg-elevated'),
               border: `1px solid ${V('--border-subtle')}`,
               borderRadius: 8,
-              padding: 10,
+              padding: 12,
             }}
           >
             <div
               style={{
-                fontSize: 9,
+                fontSize: 11,
                 fontFamily: V('--font-mono'),
                 color: V('--text-muted'),
                 textTransform: 'uppercase',
@@ -457,9 +457,9 @@ export default function NFABuilder({
                 background: V('--bg-overlay'),
                 border: `1px solid ${V('--border')}`,
                 borderRadius: 6,
-                padding: '7px 8px',
+                padding: '8px 10px',
                 fontFamily: V('--font-mono'),
-                fontSize: 11,
+                fontSize: 13,
                 color: V('--text-primary'),
                 outline: 'none',
               }}
@@ -473,7 +473,7 @@ export default function NFABuilder({
 
             <p
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 lineHeight: 1.5,
                 fontFamily: V('--font-mono'),
                 color: V('--text-secondary'),
@@ -484,7 +484,7 @@ export default function NFABuilder({
               {selectedPreset?.description}
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
               <button onClick={loadSelectedPreset} style={actionButtonStyle('#38bdf8')}>
                 Load preset
               </button>
@@ -495,7 +495,7 @@ export default function NFABuilder({
 
             <button
               onClick={loadRandomFreeform}
-              style={{ ...actionButtonStyle('#a78bfa'), width: '100%', marginTop: 6 }}
+              style={{ ...actionButtonStyle('#a78bfa'), width: '100%', marginTop: 8 }}
             >
               Random freeform NFA
             </button>
@@ -503,10 +503,10 @@ export default function NFABuilder({
 
           <p
             style={{
-              fontSize: 9,
+              fontSize: 11,
               fontFamily: V('--font-mono'),
               color: V('--text-muted'),
-              margin: '4px 0 0',
+              margin: '6px 0 0',
               textAlign: 'center',
             }}
           >
@@ -519,20 +519,20 @@ export default function NFABuilder({
         <SectionHeader label="States (Q)" open={showStates} onToggle={() => setShowStates((open) => !open)} count={states.length} />
         {showStates && (
           <div style={{ padding: '2px 14px 8px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
               {states.map((state) => (
                 <span
                   key={state}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 3,
-                    padding: '2px 7px',
+                    gap: 4,
+                    padding: '3px 8px',
                     borderRadius: 5,
                     background: state === startState ? 'rgba(56,189,248,0.1)' : V('--bg-elevated'),
                     border: `1px solid ${state === startState ? 'rgba(56,189,248,0.4)' : V('--border-subtle')}`,
                     fontFamily: V('--font-mono'),
-                    fontSize: 11,
+                    fontSize: 13,
                     fontWeight: 700,
                     color: acceptStates.includes(state)
                       ? '#fb923c'
@@ -541,8 +541,8 @@ export default function NFABuilder({
                         : V('--text-secondary'),
                   }}
                 >
-                  {state === startState && <span style={{ fontSize: 8 }}>▶</span>}
-                  {acceptStates.includes(state) && <span style={{ fontSize: 8 }}>✱</span>}
+                  {state === startState && <span style={{ fontSize: 10 }}>▶</span>}
+                  {acceptStates.includes(state) && <span style={{ fontSize: 10 }}>✱</span>}
                   {state}
                   {states.length > 1 && (
                     <button
@@ -552,8 +552,8 @@ export default function NFABuilder({
                         border: 'none',
                         cursor: 'pointer',
                         color: V('--text-muted'),
-                        fontSize: 10,
-                        padding: '0 1px',
+                        fontSize: 12,
+                        padding: '0 2px',
                         lineHeight: 1,
                       }}
                       onMouseEnter={(event) => {
@@ -570,7 +570,7 @@ export default function NFABuilder({
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               <input
                 value={newState}
                 onChange={(event) => setNewState(event.target.value)}
@@ -590,20 +590,20 @@ export default function NFABuilder({
         <SectionHeader label="Alphabet (Σ)" open={showAlpha} onToggle={() => setShowAlpha((open) => !open)} count={alphabet.length} />
         {showAlpha && (
           <div style={{ padding: '2px 14px 8px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
               {alphabet.map((symbol) => (
                 <span
                   key={symbol}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 3,
-                    padding: '2px 7px',
+                    gap: 4,
+                    padding: '3px 8px',
                     borderRadius: 5,
                     background: 'rgba(52,211,153,0.08)',
                     border: '1px solid rgba(52,211,153,0.3)',
                     fontFamily: V('--font-mono'),
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: 700,
                     color: '#34d399',
                   }}
@@ -617,8 +617,8 @@ export default function NFABuilder({
                         border: 'none',
                         cursor: 'pointer',
                         color: V('--text-muted'),
-                        fontSize: 10,
-                        padding: '0 1px',
+                        fontSize: 12,
+                        padding: '0 2px',
                         lineHeight: 1,
                       }}
                       onMouseEnter={(event) => {
@@ -637,12 +637,12 @@ export default function NFABuilder({
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  padding: '2px 7px',
+                  padding: '3px 8px',
                   borderRadius: 5,
                   background: 'rgba(167,139,250,0.08)',
                   border: '1px solid rgba(167,139,250,0.3)',
                   fontFamily: V('--font-mono'),
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: 700,
                   color: '#a78bfa',
                 }}
@@ -651,7 +651,7 @@ export default function NFABuilder({
               </span>
             </div>
 
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               <input
                 value={newSymbol}
                 onChange={(event) => setNewSymbol(event.target.value)}
@@ -683,8 +683,8 @@ export default function NFABuilder({
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 44px 44px',
-                  padding: '5px 10px',
+                  gridTemplateColumns: '1fr 52px 52px',
+                  padding: '6px 12px',
                   borderBottom: `1px solid ${V('--border-subtle')}`,
                 }}
               >
@@ -698,8 +698,8 @@ export default function NFABuilder({
                   key={state}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '1fr 44px 44px',
-                    padding: '5px 10px',
+                    gridTemplateColumns: '1fr 52px 52px',
+                    padding: '6px 12px',
                     borderBottom: index < states.length - 1 ? `1px solid ${V('--border-subtle')}` : 'none',
                     background: startState === state ? 'rgba(56,189,248,0.04)' : 'transparent',
                   }}
@@ -707,7 +707,7 @@ export default function NFABuilder({
                   <span
                     style={{
                       fontFamily: V('--font-mono'),
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: 700,
                       color: acceptStates.includes(state)
                         ? '#fb923c'
@@ -726,7 +726,7 @@ export default function NFABuilder({
                       name="nfa-start"
                       checked={startState === state}
                       onChange={() => applyAutomaton({ ...automaton, startState: state })}
-                      style={{ accentColor: '#38bdf8', width: 14, height: 14, cursor: 'pointer' }}
+                      style={{ accentColor: '#38bdf8', width: 16, height: 16, cursor: 'pointer' }}
                     />
                   </div>
 
@@ -742,7 +742,7 @@ export default function NFABuilder({
                             : [...acceptStates, state],
                         })
                       }
-                      style={{ accentColor: '#fb923c', width: 14, height: 14, cursor: 'pointer' }}
+                      style={{ accentColor: '#fb923c', width: 16, height: 16, cursor: 'pointer' }}
                     />
                   </div>
                 </div>
@@ -756,7 +756,7 @@ export default function NFABuilder({
         <SectionHeader label="Transitions (δ)" open={showTrans} onToggle={() => setShowTrans((open) => !open)} />
         {showTrans && (
           <div style={{ padding: '2px 14px 10px' }}>
-            <p style={{ fontSize: 9, fontFamily: V('--font-mono'), color: V('--text-muted'), margin: '0 0 6px' }}>
+            <p style={{ fontSize: 11, fontFamily: V('--font-mono'), color: V('--text-muted'), margin: '0 0 8px' }}>
               Comma-separated state names. The canvas updates as you type valid targets.
             </p>
             <div
@@ -770,7 +770,7 @@ export default function NFABuilder({
               <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${V('--border-subtle')}` }}>
-                    <th style={{ ...thStyle, width: 32 }}>δ</th>
+                    <th style={{ ...thStyle, width: 36 }}>δ</th>
                     {alphabet.map((symbol) => (
                       <th key={symbol} style={{ ...thStyle, color: '#38bdf8' }}>
                         {symbol}
@@ -789,9 +789,9 @@ export default function NFABuilder({
                     >
                       <td
                         style={{
-                          padding: '4px 6px',
+                          padding: '5px 6px',
                           fontFamily: V('--font-mono'),
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: 700,
                           color: acceptStates.includes(state)
                             ? '#fb923c'
@@ -801,8 +801,8 @@ export default function NFABuilder({
                         }}
                       >
                         {state}
-                        {state === startState && <span style={{ color: '#38bdf8', fontSize: 8 }}> ▶</span>}
-                        {acceptStates.includes(state) && <span style={{ color: '#fb923c', fontSize: 8 }}> ✱</span>}
+                        {state === startState && <span style={{ color: '#38bdf8', fontSize: 10 }}> ▶</span>}
+                        {acceptStates.includes(state) && <span style={{ color: '#fb923c', fontSize: 10 }}> ✱</span>}
                       </td>
 
                       {alphabet.map((symbol) => (
@@ -851,7 +851,7 @@ export default function NFABuilder({
               textAlign: 'center',
               background: 'rgba(0,200,112,0.06)',
               border: '1px solid rgba(0,200,112,0.2)',
-              fontSize: 12,
+              fontSize: 13,
               fontFamily: V('--font-mono'),
               fontWeight: 700,
               color: '#00c870',
@@ -867,8 +867,8 @@ export default function NFABuilder({
             style={{
               background: 'none',
               border: 'none',
-              padding: '1px 0',
-              fontSize: 11,
+              padding: '2px 0',
+              fontSize: 12,
               fontFamily: V('--font-mono'),
               color: V('--text-muted'),
               cursor: 'pointer',
@@ -898,21 +898,21 @@ const addInputStyle = {
   background: 'var(--bg-elevated)',
   border: '1px solid var(--border)',
   borderRadius: 6,
-  padding: '5px 9px',
+  padding: '6px 10px',
   fontFamily: 'var(--font-mono)',
-  fontSize: 12,
+  fontSize: 13,
   color: 'var(--text-primary)',
   outline: 'none',
 };
 
 const addBtnStyle = (color) => ({
   flexShrink: 0,
-  padding: '5px 12px',
+  padding: '6px 14px',
   borderRadius: 6,
   background: `${color}22`,
   border: `1px solid ${color}55`,
   fontFamily: 'var(--font-mono)',
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 700,
   color,
   cursor: 'pointer',
@@ -922,11 +922,11 @@ const addBtnStyle = (color) => ({
 
 const actionButtonStyle = (color) => ({
   borderRadius: 6,
-  padding: '7px 8px',
+  padding: '8px 10px',
   background: `${color}18`,
   border: `1px solid ${color}55`,
   fontFamily: 'var(--font-mono)',
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 700,
   color,
   cursor: 'pointer',
@@ -934,16 +934,16 @@ const actionButtonStyle = (color) => ({
 });
 
 const thStyle = {
-  padding: '5px 4px',
+  padding: '6px 4px',
   fontFamily: 'var(--font-mono)',
-  fontSize: 10,
+  fontSize: 12,
   fontWeight: 700,
   textAlign: 'center',
   color: 'var(--text-muted)',
 };
 
 const tableHeaderStyle = {
-  fontSize: 9,
+  fontSize: 11,
   fontFamily: 'var(--font-mono)',
   fontWeight: 700,
   textTransform: 'uppercase',
