@@ -1,15 +1,28 @@
 # Automata Lab
 
-Interactive Theory of Computation simulator for building, converting, visualizing, and testing finite automata in the browser.
+Interactive Theory of Computation simulator and educational platform for **learning, inferring, converting, visualizing, and testing finite automata** in the browser.
 
+---
 
+## Modes
 
-## Overview
+The application supports three operational modes:
 
-This project is a React + Vite web app that turns core automata theory algorithms into an interactive visual pipeline. It lets you work in two ways:
+1. **Automata Learning Lab (Problem 8)**:
+   - Learns an approximate or exact DFA from labeled string data ($S^+$ and $S^-$) using the **RPNI (Regular Positive and Negative Inference)** algorithm.
+   - Generates synthetic datasets over configurable alphabets with controllable sample size, length diversity, and label noise ($0–30\%$).
+   - Visualizes the full pipeline: **Target Reference DFA → Prefix Tree Acceptor (PTA) → Inferred DFA → Minimized Inferred DFA**.
+   - Evaluates test generalization: **Accuracy, Precision, Recall, F1 Score**, and **Confusion Matrix**.
+   - Language equivalence check via product automaton BFS to identify the **minimal counterexample**.
+   - **Active Learning Assistant**: Queries the Oracle for counterexamples and interactively refines the hypothesis.
+   - **Empirical Experiments**: Automated studies on the effect of training sample quantity and noisy labels.
+   - **State Clustering**: Exploratory $k$-tail continuation profile clustering.
 
-- `Regex mode`: start from a regular expression and generate the corresponding automata step by step.
-- `NFA Builder mode`: manually create an NFA or epsilon-NFA and convert it forward through the pipeline.
+2. **Regex Pipeline**:
+   - `Regex → ε-NFA → NFA → DFA → Min-DFA` via Thompson's Construction, Glushkov's Algorithm, Subset Construction, and Hopcroft's Algorithm.
+
+3. **NFA Builder**:
+   - Manually build custom NFAs with live transition table editing and convert forward to DFA and Min-DFA.
 
 The app is designed for learning, demonstrations, and Theory of Computation assignments. Instead of showing only final answers, it also shows intermediate constructions, partition splits, transition tables, and animated string simulation paths.
 

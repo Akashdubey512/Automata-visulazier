@@ -5,7 +5,10 @@ import GraphView    from './components/GraphView';
 import StepPanel    from './components/StepPanel';
 import MinStepPanel from './components/MinStepPanel';
 import StringTester from './components/StringTester';
-
+import DatasetManager from './components/DatasetManager';
+import RPNIStepPanel  from './components/RPNIStepPanel';
+import EvaluationPanel from './components/EvaluationPanel';
+import StateClusteringPanel from './components/StateClusteringPanel';
 
 import { subsetConstruction, compressNFA } from './utils/nfaToDfa';
 import { regexToENFA }    from './utils/regexToENFA';
@@ -13,6 +16,10 @@ import { buildMinimalNFA } from './utils/minimalNFA';
 import { hopcroftMinimize } from './utils/minimizeDFA';
 import { nfaToFlowData, dfaToFlowData } from './utils/graphLayout';
 import { normalizeNfaAutomaton, normalizeDfaAutomaton } from './utils/automata';
+import { LANGUAGE_PRESETS, buildReferenceDFA, generateDataset } from './utils/datasetGenerator';
+import { rpni } from './utils/rpni';
+import { checkDfaEquivalence } from './utils/automataEquivalence';
+import { evaluateDfa } from './utils/evaluation';
 
 const INITIAL_NFA = normalizeNfaAutomaton({
   states: ['q0', 'q1', 'q2'],
@@ -27,23 +34,45 @@ const INITIAL_NFA = normalizeNfaAutomaton({
   epsilon: { q0: [], q1: [], q2: [] },
 });
 
-const SIDEBAR_WIDTH = 320;
+const SIDEBAR_WIDTH = 340;
 
 export default function App() {
-  // ── Input mode ───────────────────────────────────────────────────────
-  const [inputMode, setInputMode] = useState('regex');
+  // ── Input mode: 'learn' (Problem 8) | 'regex' | 'builder' ───────────
+  const [inputMode, setInputMode] = useState('learn');
 
-  // ── Pipeline states (each maintained separately) ─────────────────────
+  // ── Classical Pipeline states ─────────────────────────────────────────
   const [nfa,         setNfa]         = useState(INITIAL_NFA);
   const [enfa,        setEnfa]        = useState(null);
   const [nfaClean,    setNfaClean]    = useState(null);
   const [dfa,         setDfa]         = useState(null);
   const [minDfa,      setMinDfa]      = useState(null);
-  // Stores the raw regex string so the NFA stage can re-run Glushkov independently
   const [regexString, setRegexString] = useState('');
 
-  // ── Active canvas stage (what's shown on the single canvas) ──────────
-  const [activeStage, setActiveStage] = useState('enfa'); // always start at ε-NFA stage
+  // ── Problem 8 Automata Learning states ────────────────────────────────
+  const [selectedPresetId, setSelectedPresetId] = useState('ends_with_abb');
+  const [customRegex,      setCustomRegex]      = useState('(a|b)*abb');
+  const [useCustomRegex,   setUseCustomRegex]   = useState(false);
+  const [alphabet,         setAlphabet]         = useState(['a', 'b']);
+  const [trainCount,       setTrainCount]       = useState(20);
+  const [maxLen,           setMaxLen]           = useState(6);
+  const [noiseRate,        setNoiseRate]        = useState(0.0);
+  const [diversity,        setDiversity]        = useState('balanced');
+  const [trainingData,     setTrainingData]     = useState([]);
+  const [testingData,      setTestingData]      = useState([]);
+  const [isLearning,       setIsLearning]       = useState(false);
+
+  // Inferred automata
+  const [referenceDfa,     setReferenceDfa]     = useState(null);
+  const [pta,              setPta]              = useState(null);
+  const [inferredDfa,      setInferredDfa]      = useState(null);
+  const [minInferredDfa,   setMinInferredDfa]   = useState(null);
+  const [rpniSteps,        setRpniSteps]        = useState([]);
+  const [rpniStep,         setRpniStep]         = useState(-1);
+  const [evaluation,       setEvaluation]       = useState(null);
+  const [equivalence,      setEquivalence]      = useState(null);
+
+  // ── Active canvas stage ──────────────────────────────────────────────
+  const [activeStage, setActiveStage] = useState('inferredDfa');
 
   // ── Simulation state ─────────────────────────────────────────────────
   const [currentStep,      setCurrentStep]      = useState(-1);
@@ -55,10 +84,9 @@ export default function App() {
   const [isPlaying,        setIsPlaying]        = useState(false);
   const playTimerRef = useRef(null);
 
-  // ── Right sidebar (replaces floating panels) ────────────────────────
-  // null = closed; 'steps' | 'test' | 'table' = which panel is active
+  // ── Right sidebar ────────────────────────────────────────────────────
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
-  const [rightTab,         setRightTab]         = useState('steps');
+  const [rightTab,         setRightTab]         = useState('eval');
 
   // ── Sidebar collapse ─────────────────────────────────────────────────
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -81,34 +109,26 @@ export default function App() {
     setIsPlaying(false);
   }, []);
 
-  // ── Conversion handlers ──────────────────────────────────────────────
+  // ── Classical Conversion Handlers ────────────────────────────────────
   const handleBuildFromRegex = useCallback((regex) => {
     const result = normalizeNfaAutomaton(regexToENFA(regex));
     setEnfa(result);
-    setRegexString(regex);    // remember the raw regex for the NFA stage
+    setRegexString(regex);
     resetFrom('enfa');
     markReady('enfa');
     setActiveStage('enfa');
   }, [resetFrom]);
 
-  // Regex mode — NFA stage: Glushkov construction + bisimulation merging
-  // This runs INDEPENDENTLY from the Thompson ε-NFA, giving the provably
-  // minimal ε-free NFA (e.g. 3 states for (a|b)*ab) without ε-elimination.
   const handleRemoveEpsilon = useCallback(() => {
     if (!regexString) return;
-    const minNFA = normalizeNfaAutomaton(buildMinimalNFA(regexString));  // Glushkov + bisimulation
+    const minNFA = normalizeNfaAutomaton(buildMinimalNFA(regexString));
     setNfaClean(minNFA);
     resetFrom('nfa');
     markReady('nfa');
     setActiveStage('nfa');
   }, [regexString, resetFrom]);
 
-  // Builder mode: same Stage 2 compression on the manually-built NFA
-
-  // Converts NFA → DFA via subset construction.
-  // In builder mode: if nfaClean is not yet set, auto-applies ε-removal on the raw NFA first.
   const handleConvert = useCallback(() => {
-    // Pick the source NFA: prefer already-compressed; fall back to compressing raw NFA
     const sourceNFA = nfaClean ?? (inputMode === 'builder' ? normalizeNfaAutomaton(compressNFA(nfa)) : null);
     if (!sourceNFA) return;
 
@@ -134,7 +154,117 @@ export default function App() {
     setActiveStage('minDfa');
   }, [dfa]);
 
-  // ── Step navigation ──────────────────────────────────────────────────
+  // ── Problem 8 Automata Inference Handlers ───────────────────────────
+  const handleRunRPNI = useCallback((overridePos = null, overrideNeg = null, customTest = null, customRef = null) => {
+    setIsLearning(true);
+    const activeRef = customRef || referenceDfa;
+    const activeTest = customTest || testingData;
+
+    const pos = overridePos !== null ? overridePos : trainingData.filter(t => t.label).map(t => t.string);
+    const neg = overrideNeg !== null ? overrideNeg : trainingData.filter(t => !t.label).map(t => t.string);
+
+    setTimeout(() => {
+      try {
+        const { pta: newPta, inferredDFA: rawInferred, steps } = rpni(pos, neg, alphabet);
+        const minInferred = normalizeDfaAutomaton(hopcroftMinimize(rawInferred));
+
+        setPta(newPta);
+        setInferredDfa(rawInferred);
+        setMinInferredDfa(minInferred);
+        setRpniSteps(steps);
+        setRpniStep(-1);
+
+        if (activeTest.length > 0) {
+          const evalRes = evaluateDfa(rawInferred, activeTest);
+          setEvaluation(evalRes);
+        }
+
+        if (activeRef) {
+          const equivRes = checkDfaEquivalence(rawInferred, activeRef, alphabet);
+          setEquivalence(equivRes);
+        }
+
+        markReady('inferredDfa');
+        markReady('minInferredDfa');
+        markReady('pta');
+        setActiveStage('inferredDfa');
+      } catch (err) {
+        console.error('RPNI error:', err);
+      } finally {
+        setIsLearning(false);
+      }
+    }, 40);
+  }, [trainingData, testingData, alphabet, referenceDfa]);
+
+  const handleGenerateDataset = useCallback(() => {
+    const targetRegex = useCustomRegex
+      ? customRegex
+      : (LANGUAGE_PRESETS.find(p => p.id === selectedPresetId)?.regex || '(a|b)*abb');
+
+    const ref = buildReferenceDFA(targetRegex);
+    setReferenceDfa(ref);
+    markReady('refDfa');
+
+    const { training, testing, positives, negatives } = generateDataset({
+      referenceDFA: ref,
+      alphabet,
+      trainCount,
+      testCount: 40,
+      maxStringLength: maxLen,
+      noiseRate,
+      diversity,
+    });
+
+    setTrainingData(training);
+    setTestingData(testing);
+
+    handleRunRPNI(positives, negatives, testing, ref);
+  }, [useCustomRegex, customRegex, selectedPresetId, alphabet, trainCount, maxLen, noiseRate, diversity, handleRunRPNI]);
+
+  // Initial load for learning mode
+  useEffect(() => {
+    if (inputMode === 'learn' && !referenceDfa) {
+      handleGenerateDataset();
+    }
+  }, [inputMode, referenceDfa, handleGenerateDataset]);
+
+  const handleAddCounterexample = useCallback((str, trueLabel) => {
+    const newItem = { string: str, label: trueLabel, trueLabel, isNoisy: false };
+    setTrainingData(prev => {
+      const updated = [newItem, ...prev.filter(p => p.string !== str)];
+      const pos = updated.filter(t => t.label).map(t => t.string);
+      const neg = updated.filter(t => !t.label).map(t => t.string);
+      handleRunRPNI(pos, neg);
+      return updated;
+    });
+  }, [handleRunRPNI]);
+
+  const handleAddTrainingExample = (str, label) => {
+    const newItem = { string: str, label, trueLabel: label, isNoisy: false };
+    setTrainingData(prev => [...prev, newItem]);
+  };
+
+  const handleRemoveTrainingExample = (index) => {
+    setTrainingData(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleClearTrainingData = () => {
+    setTrainingData([]);
+  };
+
+  const handleModeSwitch = (mode) => {
+    setInputMode(mode);
+    setIsPlaying(false);
+    if (mode === 'learn') {
+      setActiveStage('inferredDfa');
+      setRightTab('eval');
+    } else {
+      setActiveStage('enfa');
+      setRightTab('steps');
+    }
+  };
+
+  // ── Step Navigation ──────────────────────────────────────────────────
   const handleStepChange = useCallback((idx) => {
     setCurrentStep(idx);
     setMinStep(-1);
@@ -182,7 +312,6 @@ export default function App() {
 
   useEffect(() => {
     clearTimeout(playTimerRef.current);
-
     if (!isPlaying || activeSteps.length === 0 || activeStepIdx >= activeSteps.length - 1) return undefined;
 
     const nextStep = activeStepIdx === -1 ? 0 : activeStepIdx + 1;
@@ -203,56 +332,85 @@ export default function App() {
     setSimRejected(false);
   };
 
-  // ── Graph data ───────────────────────────────────────────────────────
-  // ε-NFA: regex mode → Thompson result; builder mode → the builder's NFA (has ε col)
+  // ── Graph Flow Data ──────────────────────────────────────────────────
   const enfaFlow = useMemo(() => {
     const src = inputMode === 'builder' ? nfa : enfa;
     return src ? nfaToFlowData(src) : null;
   }, [enfa, nfa, inputMode]);
-  // NFA:   always the ε-removed version
+
   const nfaFlow    = useMemo(() => nfaClean ? nfaToFlowData(nfaClean) : null, [nfaClean]);
   const dfaFlow    = useMemo(() => dfa    ? dfaToFlowData(dfa,    highlightedNodes, pathNodes, traverseEdge, simRejected) : null, [dfa,    highlightedNodes, pathNodes, traverseEdge, simRejected]);
   const minDfaFlow = useMemo(() => minDfa ? dfaToFlowData(minDfa, highlightedNodes, pathNodes, traverseEdge, simRejected) : null, [minDfa, highlightedNodes, pathNodes, traverseEdge, simRejected]);
 
-  // ── Active flow data for canvas ──────────────────────────────────────
+  // Problem 8 Graph Flows
+  const refDfaFlow       = useMemo(() => referenceDfa   ? dfaToFlowData(referenceDfa,   highlightedNodes, pathNodes, traverseEdge, simRejected) : null, [referenceDfa,   highlightedNodes, pathNodes, traverseEdge, simRejected]);
+  const ptaFlow          = useMemo(() => pta            ? dfaToFlowData(pta,            highlightedNodes, pathNodes, traverseEdge, simRejected) : null, [pta,            highlightedNodes, pathNodes, traverseEdge, simRejected]);
+  const inferredDfaFlow  = useMemo(() => inferredDfa    ? dfaToFlowData(inferredDfa,    highlightedNodes, pathNodes, traverseEdge, simRejected) : null, [inferredDfa,    highlightedNodes, pathNodes, traverseEdge, simRejected]);
+  const minInferredFlow  = useMemo(() => minInferredDfa ? dfaToFlowData(minInferredDfa, highlightedNodes, pathNodes, traverseEdge, simRejected) : null, [minInferredDfa, highlightedNodes, pathNodes, traverseEdge, simRejected]);
+
+  // ── Active Canvas Flow ───────────────────────────────────────────────
   const activeFlow = useMemo(() => {
+    if (inputMode === 'learn') {
+      if (activeStage === 'refDfa') return refDfaFlow;
+      if (activeStage === 'pta') return ptaFlow;
+      if (activeStage === 'minInferredDfa') return minInferredFlow;
+      return inferredDfaFlow;
+    }
     if (activeStage === 'enfa') return enfaFlow;
     if (activeStage === 'nfa')  return nfaFlow;
     if (activeStage === 'minDfa') return minDfaFlow;
     return dfaFlow;
-  }, [activeStage, enfaFlow, nfaFlow, dfaFlow, minDfaFlow]);
+  }, [inputMode, activeStage, refDfaFlow, ptaFlow, inferredDfaFlow, minInferredFlow, enfaFlow, nfaFlow, dfaFlow, minDfaFlow]);
 
   const { nodes: canvasNodes = [], edges: canvasEdges = [] } = activeFlow || {};
 
-  // ── Pipeline stages config (unified for both modes) ──────────────────
-  const pipelineStages = useMemo(() => [
-    // ε-NFA: always available in builder mode; needs regex build in regex mode
-    { id: 'enfa', label: 'ε-NFA', color: 'purple',
-      available: inputMode === 'builder' ? true : !!enfa,
-      done:      inputMode === 'builder' ? true : !!enfa },
-    // NFA: available after ε-removal in both modes
-    { id: 'nfa',    label: 'NFA',     color: 'indigo',  available: !!nfaClean, done: !!nfaClean },
-    { id: 'dfa',    label: 'DFA',     color: 'emerald', available: !!dfa,      done: !!dfa },
-    { id: 'minDfa', label: 'Min-DFA', color: 'amber',   available: !!minDfa,   done: !!minDfa },
-  ], [inputMode, enfa, nfaClean, dfa, minDfa]);
+  // ── Pipeline Stages Config ───────────────────────────────────────────
+  const pipelineStages = useMemo(() => {
+    if (inputMode === 'learn') {
+      return [
+        { id: 'refDfa',        label: 'Target DFA',   color: 'purple',  available: !!referenceDfa,   done: !!referenceDfa },
+        { id: 'pta',           label: 'PTA Tree',     color: 'indigo',  available: !!pta,            done: !!pta },
+        { id: 'inferredDfa',   label: 'Inferred DFA', color: 'emerald', available: !!inferredDfa,    done: !!inferredDfa },
+        { id: 'minInferredDfa',label: 'Min Inferred', color: 'amber',   available: !!minInferredDfa, done: !!minInferredDfa },
+      ];
+    }
+    return [
+      { id: 'enfa', label: 'ε-NFA', color: 'purple',
+        available: inputMode === 'builder' ? true : !!enfa,
+        done:      inputMode === 'builder' ? true : !!enfa },
+      { id: 'nfa',    label: 'NFA',     color: 'indigo',  available: !!nfaClean, done: !!nfaClean },
+      { id: 'dfa',    label: 'DFA',     color: 'emerald', available: !!dfa,      done: !!dfa },
+      { id: 'minDfa', label: 'Min-DFA', color: 'amber',   available: !!minDfa,   done: !!minDfa },
+    ];
+  }, [inputMode, referenceDfa, pta, inferredDfa, minInferredDfa, enfa, nfaClean, dfa, minDfa]);
 
-  // ── Active DFA for string tester ─────────────────────────────────────
+  // ── Active DFA for String Tester ─────────────────────────────────────
   const activeDFA = useMemo(() => {
+    if (inputMode === 'learn') {
+      if (activeStage === 'refDfa') return referenceDfa;
+      if (activeStage === 'pta') return pta;
+      if (activeStage === 'minInferredDfa') return minInferredDfa;
+      return inferredDfa;
+    }
     if (activeStage === 'dfa') return dfa;
     if (activeStage === 'minDfa') return minDfa;
     return null;
-  }, [activeStage, dfa, minDfa]);
+  }, [inputMode, activeStage, referenceDfa, pta, inferredDfa, minInferredDfa, dfa, minDfa]);
 
   const testPanelMessage = useMemo(() => {
+    if (inputMode === 'learn') {
+      return 'Generate dataset and infer DFA to test strings';
+    }
     if (activeStage === 'dfa' || activeStage === 'minDfa') {
       return 'Build this machine to enable testing';
     }
     return 'Select the DFA or Min-DFA canvas to test strings';
-  }, [activeStage]);
+  }, [inputMode, activeStage]);
 
   const activeDFAKey = useMemo(() => {
     if (!activeDFA) return `no-dfa|${activeStage}`;
     return JSON.stringify({
+      mode: inputMode,
       stage: activeStage,
       start: activeDFA.startState ?? activeDFA.start ?? '',
       states: activeDFA.states ?? [],
@@ -260,38 +418,22 @@ export default function App() {
       alphabet: activeDFA.alphabet ?? [],
       transitions: activeDFA.transitions ?? {},
     });
-  }, [activeDFA, activeStage]);
+  }, [activeDFA, activeStage, inputMode]);
 
-  // ── Stats ─────────────────────────────────────────────────────────────
-  const dfaStats = dfa  ? { states: dfa.states.length,  accept: dfa.acceptStates.length } : null;
-  const minStats = minDfa ? { original: minDfa.originalStateCount, minimized: minDfa.minimizedStateCount } : null;
-
-  // ── Which "ready" stage to auto-switch to on stage click ─────────────
   const handleStageClick = (id) => {
     setIsPlaying(false);
     clearReady(id);
     setActiveStage(id);
   };
 
-  // ── Next action button (what to do next in the pipeline) ─────────────
-  // eslint-disable-next-line no-unused-vars
-  const nextAction = useMemo(() => {
-    if (inputMode === 'regex') {
-      if (!enfa)     return null;
-      if (!nfaClean) return { label: 'ε → NFA', action: handleRemoveEpsilon, color: 'purple' };
-      if (!dfa)      return { label: '→ DFA',    action: handleConvert,       color: 'indigo' };
-      if (!minDfa)   return { label: '✦ Minimize', action: handleMinimize,   color: 'amber' };
-      return null;
-    } else {
-      // Builder mode: Convert goes directly, auto-removing ε if needed
-      if (!dfa)    return { label: '⚡ Convert → DFA', action: handleConvert,   color: 'indigo' };
-      if (!minDfa) return { label: '✦ Minimize DFA',  action: handleMinimize, color: 'amber' };
-      return null;
-    }
-  }, [inputMode, enfa, nfaClean, dfa, minDfa, handleConvert, handleMinimize, handleRemoveEpsilon]);
-
-  // ── Transition table data for the active automaton stage ────────────────
+  // ── Transition Table Data ────────────────────────────────────────────
   const tableInfo = useMemo(() => {
+    if (inputMode === 'learn') {
+      if (activeStage === 'refDfa')        return referenceDfa   ? { automaton: referenceDfa,   type: 'dfa',    label: 'Target DFA' }        : null;
+      if (activeStage === 'pta')           return pta            ? { automaton: pta,            type: 'dfa',    label: 'Prefix Tree Acceptor' } : null;
+      if (activeStage === 'minInferredDfa')return minInferredDfa ? { automaton: minInferredDfa, type: 'minDfa', label: 'Min Inferred DFA' }   : null;
+      return inferredDfa ? { automaton: inferredDfa, type: 'dfa', label: 'Inferred DFA' } : null;
+    }
     if (activeStage === 'enfa') {
       const src = inputMode === 'builder' ? nfa : enfa;
       return src ? { automaton: src, type: 'enfa', label: 'ε-NFA' } : null;
@@ -300,7 +442,25 @@ export default function App() {
     if (activeStage === 'dfa')    return dfa      ? { automaton: dfa,      type: 'dfa',    label: 'DFA' }     : null;
     if (activeStage === 'minDfa') return minDfa   ? { automaton: minDfa,   type: 'minDfa', label: 'Min-DFA' } : null;
     return null;
-  }, [activeStage, inputMode, nfa, enfa, nfaClean, dfa, minDfa]);
+  }, [inputMode, activeStage, referenceDfa, pta, inferredDfa, minInferredDfa, nfa, enfa, nfaClean, dfa, minDfa]);
+
+  // ── Right Sidebar Tabs Config ────────────────────────────────────────
+  const rightTabs = useMemo(() => {
+    if (inputMode === 'learn') {
+      return [
+        { id: 'eval',      icon: '📊', label: 'Evaluation' },
+        { id: 'rpniSteps', icon: '⚡', label: 'RPNI Steps' },
+        { id: 'test',      icon: '▷',  label: 'Test String' },
+        { id: 'table',     icon: '⊞',  label: 'Table' },
+        { id: 'clusters',  icon: '🔮', label: 'Clusters' },
+      ];
+    }
+    return [
+      { id: 'steps', icon: '≡', label: activeStage === 'minDfa' ? 'Hopcroft' : 'Steps' },
+      { id: 'test',  icon: '▷', label: 'Test' },
+      { id: 'table', icon: '⊞', label: 'Table' },
+    ];
+  }, [inputMode, activeStage]);
 
   return (
     <div style={{
@@ -309,7 +469,7 @@ export default function App() {
       fontFamily: 'var(--font-body)',
     }}>
 
-      {/* ── Top Stage Tabs (thin bar) ─────────────────────────────────── */}
+      {/* ── Top Stage Tabs ────────────────────────────────────────────── */}
       <div style={{
         flexShrink: 0, height: 44,
         display: 'flex', alignItems: 'center',
@@ -380,7 +540,6 @@ export default function App() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {/* Done check or step number */}
                   <span style={{
                     width: 18, height: 18, borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -394,7 +553,6 @@ export default function App() {
                   </span>
                   {stage.label}
 
-                  {/* Ready pulse dot */}
                   {isReady && !isActive && (
                     <span style={{
                       position: 'absolute', top: 6, right: 4,
@@ -413,24 +571,15 @@ export default function App() {
           })}
         </div>
 
-        {/* Right side: stats + sidebar toggle */}
+        {/* Right side stats + sidebar toggle */}
         <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          {/* Stats chip */}
-          {activeStage === 'dfa' && dfaStats && (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', paddingRight: 12 }}>
-              <span style={{ color: '#38bdf8', fontWeight: 700 }}>{dfaStats.states}</span> states ·{' '}
-              <span style={{ color: '#34d399', fontWeight: 700 }}>{dfaStats.accept}</span> accept
-            </span>
-          )}
-          {activeStage === 'minDfa' && minStats && (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', paddingRight: 12 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>{minStats.original}</span>
-              {' → '}
-              <span style={{ color: '#38bdf8', fontWeight: 700 }}>{minStats.minimized}</span> states
+          {inputMode === 'learn' && evaluation && (
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', paddingRight: 14 }}>
+              Test Acc: <span style={{ color: '#00ff88', fontWeight: 700 }}>{evaluation.accuracy}%</span> ·{' '}
+              <span style={{ color: '#38bdf8', fontWeight: 700 }}>{inferredDfa?.states.length || 0}</span> states
             </span>
           )}
 
-          {/* Right sidebar collapse toggle */}
           <button
             onClick={() => setRightSidebarOpen(o => !o)}
             title={rightSidebarOpen ? 'Collapse tools' : 'Expand tools'}
@@ -449,10 +598,12 @@ export default function App() {
           >
             {rightSidebarOpen && (
               <span style={{
-                fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
+                fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
                 color: 'var(--text-muted)', textTransform: 'uppercase',
-                fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap',
-              }}>Tools</span>
+                fontFamily: 'var(--font-mono)', marginRight: 'auto',
+              }}>
+                Tools & Analysis
+              </span>
             )}
             <span style={{ fontSize: 15, color: 'var(--text-muted)', flexShrink: 0, lineHeight: 1 }}>
               {rightSidebarOpen ? '▶' : '◀'}
@@ -461,10 +612,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Main area: sidebar + canvas ──────────────────────────────────── */}
+      {/* ── Main Workspace ────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
-        {/* ── Left Sidebar ─────────────────────────────────────────────── */}
+        {/* ── Left Sidebar (Controls) ─────────────────────────────────── */}
         <div style={{
           width: sidebarOpen ? SIDEBAR_WIDTH : 0,
           flexShrink: 0,
@@ -478,13 +629,13 @@ export default function App() {
 
             {/* Title block */}
             <div style={{
-              padding: '16px 16px 14px',
+              padding: '14px 16px',
               borderBottom: '1px solid var(--border-subtle)',
               flexShrink: 0,
             }}>
               <h1 style={{
                 margin: 0,
-                fontSize: 20, fontWeight: 700,
+                fontSize: 19, fontWeight: 700,
                 fontFamily: 'var(--font-heading)',
                 color: 'var(--text-primary)',
                 letterSpacing: '-0.02em',
@@ -492,36 +643,38 @@ export default function App() {
                 Automata Lab
               </h1>
               <p style={{
-                margin: '4px 0 0',
-                fontSize: 12, fontFamily: 'var(--font-mono)',
+                margin: '3px 0 0',
+                fontSize: 11, fontFamily: 'var(--font-mono)',
                 color: 'var(--text-muted)',
               }}>
-                Regex → ε-NFA → NFA → DFA → Min-DFA
+                {inputMode === 'learn'
+                  ? 'Problem 8: Learn DFA from Training Data (RPNI)'
+                  : inputMode === 'regex'
+                  ? 'Regex → ε-NFA → NFA → DFA → Min-DFA'
+                  : 'Manual NFA → NFA → DFA → Min-DFA'}
               </p>
 
               {/* Mode toggle */}
               <div style={{
-                display: 'flex', gap: 6, marginTop: 12,
+                display: 'flex', gap: 4, marginTop: 10,
                 background: 'var(--bg-elevated)', borderRadius: 8,
                 padding: 3, border: '1px solid var(--border-subtle)',
               }}>
                 {[
-                  { id: 'builder', label: '⚙ NFA Builder' },
+                  { id: 'learn',   label: '⚡ Learn (P8)' },
                   { id: 'regex',   label: '✦ Regex' },
+                  { id: 'builder', label: '⚙ Builder' },
                 ].map(m => (
                   <button
                     key={m.id}
-                    onClick={() => {
-                      setInputMode(m.id);
-                      if (m.id === 'builder') setActiveStage('enfa');
-                      else if (enfa) setActiveStage('enfa');
-                    }}
+                    onClick={() => handleModeSwitch(m.id)}
                     style={{
-                      flex: 1, padding: '7px 0', borderRadius: 6,
-                      fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600,
+                      flex: 1, padding: '6px 0', borderRadius: 6,
+                      fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 600,
                       background: inputMode === m.id ? 'var(--accent)' : 'transparent',
                       color: inputMode === m.id ? '#fff' : 'var(--text-muted)',
                       cursor: 'pointer',
+                      border: 'none',
                       transition: 'all 0.15s',
                       boxShadow: inputMode === m.id ? '0 2px 8px rgba(110,86,207,0.35)' : 'none',
                     }}
@@ -534,7 +687,34 @@ export default function App() {
 
             {/* Input panel (scrollable) */}
             <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
-              {inputMode === 'builder' ? (
+              {inputMode === 'learn' ? (
+                <DatasetManager
+                  selectedPresetId={selectedPresetId}
+                  onSelectPreset={setSelectedPresetId}
+                  customRegex={customRegex}
+                  onChangeCustomRegex={setCustomRegex}
+                  useCustomRegex={useCustomRegex}
+                  onToggleUseCustomRegex={setUseCustomRegex}
+                  alphabet={alphabet}
+                  onChangeAlphabet={setAlphabet}
+                  trainCount={trainCount}
+                  onChangeTrainCount={setTrainCount}
+                  maxLen={maxLen}
+                  onChangeMaxLen={setMaxLen}
+                  noiseRate={noiseRate}
+                  onChangeNoiseRate={setNoiseRate}
+                  diversity={diversity}
+                  onChangeDiversity={setDiversity}
+                  onGenerateDataset={handleGenerateDataset}
+                  onRunRPNI={() => handleRunRPNI()}
+                  trainingData={trainingData}
+                  onAddTrainingExample={handleAddTrainingExample}
+                  onRemoveTrainingExample={handleRemoveTrainingExample}
+                  onClearTrainingData={handleClearTrainingData}
+                  testingData={testingData}
+                  isLearning={isLearning}
+                />
+              ) : inputMode === 'builder' ? (
                 <NFABuilder
                   nfa={nfa}
                   onNFAChange={(n) => { setNfa(normalizeNfaAutomaton(n)); setNfaClean(null); resetFrom('nfa'); setActiveStage('enfa'); }}
@@ -559,39 +739,46 @@ export default function App() {
               )}
             </div>
 
-
           </div>
         </div>
 
         {/* ── Canvas Area ────────────────────────────────────────────── */}
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minWidth: 0 }}>
-
-          {/* The graph */}
           {canvasNodes.length > 0 ? (
             <GraphView nodes={canvasNodes} edges={canvasEdges} />
           ) : (
             <EmptyCanvas activeStage={activeStage} inputMode={inputMode} />
           )}
 
-          {/* Sim controls are now inside the right sidebar Steps tab */}
-
-          {/* ── Stage label (bottom-left of canvas) ─────────────────── */}
+          {/* Stage label overlay */}
           <div style={{
             position: 'absolute', bottom: 16, left: 16,
-            fontFamily: 'var(--font-mono)', fontSize: 12,
-            color: 'var(--text-muted)',
-            background: 'rgba(13,17,23,0.7)',
-            backdropFilter: 'blur(8px)',
-            padding: '5px 12px', borderRadius: 6,
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '6px 12px', borderRadius: 8,
+            background: 'rgba(13,17,23,0.85)',
+            backdropFilter: 'blur(10px)',
             border: '1px solid var(--border-subtle)',
-            zIndex: 5, userSelect: 'none',
-            letterSpacing: '0.08em', textTransform: 'uppercase',
+            fontFamily: 'var(--font-mono)', fontSize: 12,
+            color: 'var(--text-secondary)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            pointerEvents: 'none',
           }}>
-            {pipelineStages.find(s => s.id === activeStage)?.label || '—'}
+            <span style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: activeStage === 'inferredDfa' || activeStage === 'dfa' ? '#00ff88' : activeStage === 'minInferredDfa' || activeStage === 'minDfa' ? '#ffb800' : '#6e56cf',
+            }} />
+            <span>
+              {inputMode === 'learn'
+                ? activeStage === 'refDfa' ? 'Target Reference DFA' : activeStage === 'pta' ? 'Prefix Tree Acceptor (PTA)' : activeStage === 'minInferredDfa' ? 'Minimized Inferred DFA' : 'Inferred DFA (RPNI)'
+                : activeStage.toUpperCase()}
+            </span>
+            <span style={{ color: 'var(--text-muted)' }}>
+              ({canvasNodes.length} states)
+            </span>
           </div>
         </div>
 
-        {/* ── Right Sidebar ──────────────────────────────────────── */}
+        {/* ── Right Sidebar (Tools & Analysis) ───────────────────────── */}
         <div style={{
           width: rightSidebarOpen ? SIDEBAR_WIDTH : 0,
           flexShrink: 0,
@@ -603,44 +790,69 @@ export default function App() {
         }}>
           <div style={{ width: SIDEBAR_WIDTH, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-            {/* ── Tab bar ─────────────────────────────────────────── */}
+            {/* Tab bar */}
             <div style={{
               flexShrink: 0,
               display: 'flex',
               borderBottom: '1px solid var(--border-subtle)',
               background: 'var(--bg-elevated)',
             }}>
-              {[
-                { id: 'steps', icon: '≡', label: activeStage === 'minDfa' ? "Hopcroft" : 'Steps' },
-                { id: 'test',  icon: '▷', label: 'Test' },
-                { id: 'table', icon: '⊞', label: 'Table' },
-              ].map(tab => (
+              {rightTabs.map(tab => (
                 <button key={tab.id} onClick={() => setRightTab(tab.id)}
                   style={{
-                    flex: 1, padding: '10px 4px',
+                    flex: 1, padding: '10px 2px',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     fontFamily: 'var(--font-mono)', fontWeight: 700,
-                    fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase',
                     cursor: 'pointer',
+                    border: 'none',
                     color: rightTab === tab.id ? '#38bdf8' : 'var(--text-muted)',
                     borderBottom: rightTab === tab.id ? '2px solid #38bdf8' : '2px solid transparent',
                     background: rightTab === tab.id ? 'rgba(56,189,248,0.07)' : 'transparent',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <span style={{ fontSize: 16 }}>{tab.icon}</span>
+                  <span style={{ fontSize: 15 }}>{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            {/* ── Tab content ──────────────────────────────────────── */}
+            {/* Tab content */}
             <div style={{ flex: 1, overflow: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
 
-              {/* Steps tab */}
+              {/* Evaluation Tab (Problem 8) */}
+              {rightTab === 'eval' && (
+                <EvaluationPanel
+                  evaluation={evaluation}
+                  equivalence={equivalence}
+                  referenceDFA={referenceDfa}
+                  inferredDFA={inferredDfa}
+                  alphabet={alphabet}
+                  onAddCounterexample={handleAddCounterexample}
+                />
+              )}
+
+              {/* RPNI Step-by-Step Tab (Problem 8) */}
+              {rightTab === 'rpniSteps' && (
+                <RPNIStepPanel
+                  steps={rpniSteps}
+                  currentStep={rpniStep}
+                  onStepChange={setRpniStep}
+                />
+              )}
+
+              {/* State Clustering Tab (Problem 8) */}
+              {rightTab === 'clusters' && (
+                <StateClusteringPanel
+                  dfa={activeDFA}
+                  k={2}
+                />
+              )}
+
+              {/* Classical Steps Tab */}
               {rightTab === 'steps' && (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-                  {/* Inline sim controls */}
                   {(activeStage === 'dfa' || activeStage === 'minDfa') && activeSteps.length > 0 && (
                     <div style={{
                       flexShrink: 0, padding: '8px 12px',
@@ -670,7 +882,6 @@ export default function App() {
                       </span>
                     </div>
                   )}
-                  {/* Step list */}
                   <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                     {activeStage === 'minDfa' ? (
                       <MinStepPanel
@@ -678,7 +889,7 @@ export default function App() {
                         currentStep={minStep}
                         onStepChange={handleMinStepChange}
                         partitionMap={minDfa?.partitionMap}
-                        stats={minStats}
+                        stats={minDfa ? { original: minDfa.originalStateCount, minimized: minDfa.minimizedStateCount } : null}
                       />
                     ) : (
                       <StepPanel
@@ -691,7 +902,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* Test tab */}
+              {/* String Simulator Tab */}
               {rightTab === 'test' && (
                 <StringTester
                   key={activeDFAKey}
@@ -701,7 +912,7 @@ export default function App() {
                 />
               )}
 
-              {/* Table tab */}
+              {/* Transition Table Tab */}
               {rightTab === 'table' && (
                 tableInfo ? (
                   <RightSidebarTable
@@ -722,12 +933,13 @@ export default function App() {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
 
-// ── Sim Button ────────────────────────────────────────────────────────────
+// ── Sim Button Helper ─────────────────────────────────────────────────────
 function SimBtn({ children, onClick, disabled, title, active }) {
   return (
     <button
@@ -741,40 +953,19 @@ function SimBtn({ children, onClick, disabled, title, active }) {
   );
 }
 
-// ── Panel Toggle Button ───────────────────────────────────────────────────
-function PanelToggle({ label, icon, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '6px 12px',
-        background: active ? 'rgba(110,86,207,0.2)' : 'rgba(13,17,23,0.88)',
-        border: `1px solid ${active ? 'rgba(110,86,207,0.7)' : 'var(--border)'}`,
-        borderRadius: 8,
-        fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600,
-        color: active ? '#b09af0' : 'var(--text-secondary)',
-        cursor: 'pointer',
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-        transition: 'all 0.18s ease',
-      }}
-    >
-      <span style={{ fontSize: 14 }}>{icon}</span>
-      {label}
-    </button>
-  );
-}
-
-// ── Empty canvas placeholder ──────────────────────────────────────────────
+// ── Empty Canvas Placeholder ──────────────────────────────────────────────
 function EmptyCanvas({ activeStage, inputMode }) {
   const messages = {
-    enfa:    { icon: '✦', text: 'Enter a regex in the sidebar and click "Build ε-NFA"', sub: 'Thompson\'s construction' },
-    nfa:     { icon: '∿', text: inputMode === 'regex' ? 'Click "Remove ε-transitions → NFA" in sidebar' : 'Your NFA from the builder will appear here', sub: 'ε-closure elimination' },
-    dfa:     { icon: '⚡', text: 'Click "Convert → DFA" in the sidebar', sub: 'Subset construction algorithm' },
-    minDfa:  { icon: '✦', text: 'Click "Minimize DFA" in the sidebar', sub: "Hopcroft's algorithm" },
+    refDfa:         { icon: '🎯', text: 'Target Reference DFA', sub: 'Ground-truth regular language model' },
+    pta:            { icon: '🌳', text: 'Prefix Tree Acceptor (PTA)', sub: 'Tree-shaped DFA constructed from positive examples S+' },
+    inferredDfa:    { icon: '⚡', text: 'Inferred DFA (RPNI)', sub: 'Click "Infer DFA" in sidebar to learn automaton' },
+    minInferredDfa: { icon: '✦', text: 'Minimized Inferred DFA', sub: 'Hopcroft minimization of the learned machine' },
+    enfa:           { icon: '✦', text: 'Enter a regex in the sidebar and click "Build ε-NFA"', sub: "Thompson's construction" },
+    nfa:            { icon: '∿', text: inputMode === 'regex' ? 'Click "Remove ε-transitions → NFA" in sidebar' : 'Your NFA from the builder will appear here', sub: 'ε-closure elimination' },
+    dfa:            { icon: '⚡', text: 'Click "Convert → DFA" in the sidebar', sub: 'Subset construction algorithm' },
+    minDfa:         { icon: '✦', text: 'Click "Minimize DFA" in the sidebar', sub: "Hopcroft's algorithm" },
   };
-  const msg = messages[activeStage] || messages.nfa;
+  const msg = messages[activeStage] || messages.inferredDfa || messages.dfa;
 
   return (
     <div style={{
@@ -784,7 +975,6 @@ function EmptyCanvas({ activeStage, inputMode }) {
       gap: 12, userSelect: 'none',
       background: 'var(--bg-base)',
     }}>
-      {/* Dot grid background */}
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: 'radial-gradient(circle, var(--border-subtle) 1px, transparent 1px)',
@@ -815,100 +1005,133 @@ function EmptyCanvas({ activeStage, inputMode }) {
   );
 }
 
-// ── Right Sidebar Transition Table (vertical layout, no horizontal scroll) ──
+// ── Right Sidebar Transition Table ────────────────────────────────────────
 function RightSidebarTable({ automaton, type }) {
   if (!automaton) return null;
-  const isNFA   = type === 'enfa' || type === 'nfa';
-  const normalized = isNFA ? normalizeNfaAutomaton(automaton) : normalizeDfaAutomaton(automaton);
-  const { states = [], alphabet = [], transitions = {}, epsilon = {}, startState, acceptStates = [] } = normalized;
-  const showEps = type === 'enfa';
-  const cols    = showEps ? [...alphabet, 'ε'] : [...alphabet];
 
-  const getCell = (state, sym) => {
-    if (sym === 'ε') {
-      const eps = epsilon?.[state] || [];
-      return eps.length === 0 ? '∅' : eps.join(', ');
+  const states       = automaton.states       || [];
+  const alphabet     = automaton.alphabet     || [];
+  const transitions  = automaton.transitions  || {};
+  const epsilon      = automaton.epsilon      || {};
+  const startState   = automaton.startState   || automaton.start   || '';
+  const acceptStates = automaton.acceptStates || automaton.accept  || [];
+
+  const showEpsilon = type === 'enfa';
+
+  const formatTarget = (val) => {
+    if (!val) return '—';
+    if (Array.isArray(val)) {
+      if (val.length === 0) return '—';
+      return `{${val.join(', ')}}`;
     }
-    const val = transitions[state]?.[sym];
-    if (isNFA) {
-      if (!val || (Array.isArray(val) && val.length === 0)) return '∅';
-      return Array.isArray(val) ? val.join(', ') : val;
-    }
-    return val || '∅';
+    return String(val);
   };
 
-  const typeColors = { enfa: '#b44dff', nfa: '#6e56cf', dfa: '#00c870', minDfa: '#ffb800' };
-  const hdrColor   = typeColors[type] || '#00c870';
-
   return (
-    <div style={{ overflowY: 'auto', overflowX: 'hidden', height: '100%', padding: '10px 12px' }}>
-      {states.map(state => {
-        const isStart  = state === startState;
-        const isAccept = acceptStates.includes(state);
-        const isDead   = state === '∅';
-        return (
-          <div key={state} style={{
-            marginBottom: 8, borderRadius: 7,
-            border: '1px solid var(--border-subtle)',
-            overflow: 'hidden',
-            background: isDead ? 'rgba(0,0,0,0.15)' : 'var(--bg-elevated)',
-          }}>
-            {/* State header */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 10px',
-              borderBottom: '1px solid var(--border-subtle)',
-              background: 'rgba(255,255,255,0.02)',
-            }}>
-              {isStart  && <span style={{ color: '#6e56cf', fontSize: 12, flexShrink: 0 }}>→</span>}
-              {isAccept && <span style={{ color: '#00c870', fontSize: 12, flexShrink: 0 }}>*</span>}
-              <span style={{
-                fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13,
-                color: isDead ? 'var(--text-muted)' : isAccept ? '#00e080' : isStart ? '#9080d0' : 'var(--text-secondary)',
-                wordBreak: 'break-all',
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div style={{
+        flexShrink: 0, padding: '10px 14px',
+        borderBottom: '1px solid var(--border-subtle)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'var(--bg-elevated)',
+      }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+          color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em',
+        }}>
+          δ Transition Function
+        </span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
+          {states.length} states · Σ = {'{'}{alphabet.join(', ')}{'}'}
+        </span>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 10px' }}>
+        <table style={{
+          width: '100%', borderCollapse: 'collapse',
+          fontFamily: 'var(--font-mono)', fontSize: 12,
+        }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <th style={{
+                textAlign: 'left', padding: '6px 8px',
+                color: 'var(--text-muted)', fontWeight: 600, fontSize: 11,
               }}>
-                {isNFA ? state : (state === '∅' ? '∅' : `{${state}}`)}
-              </span>
-            </div>
-            {/* One row per symbol */}
-            {cols.map((sym, si) => {
-              const val     = getCell(state, sym);
-              const isEmpty = val === '∅';
-              return (
-                <div key={sym} style={{
-                  display: 'flex', alignItems: 'flex-start', padding: '4px 10px', gap: 8,
-                  borderBottom: si < cols.length - 1 ? '1px solid rgba(33,38,45,0.6)' : 'none',
+                State
+              </th>
+              {alphabet.map(sym => (
+                <th key={sym} style={{
+                  textAlign: 'center', padding: '6px 8px',
+                  color: 'var(--neon-cyan)', fontWeight: 700, fontSize: 12,
                 }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700,
-                    flexShrink: 0, minWidth: 14,
-                    color: sym === 'ε' ? '#b44dff' : hdrColor,
-                  }}>{sym}</span>
-                  <span style={{
-                    color: 'var(--border)', fontSize: 12, flexShrink: 0,
-                    borderLeft: '1px solid var(--border-subtle)',
-                    marginLeft: 2, marginRight: 4, alignSelf: 'stretch',
-                  }} />
-                  <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 12,
-                    color: isEmpty ? 'var(--text-muted)' : hdrColor,
-                    fontWeight: isEmpty ? 400 : 600,
-                    wordBreak: 'break-word', lineHeight: 1.5,
-                  }}>{val}</span>
-                </div>
+                  {sym}
+                </th>
+              ))}
+              {showEpsilon && (
+                <th style={{
+                  textAlign: 'center', padding: '6px 8px',
+                  color: 'var(--neon-purple)', fontWeight: 700, fontSize: 12,
+                }}>
+                  ε
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {states.map(state => {
+              const isStart  = state === startState;
+              const isAccept = acceptStates.includes(state);
+              return (
+                <tr
+                  key={state}
+                  style={{
+                    borderBottom: '1px solid rgba(255,255,255,0.03)',
+                    background: isAccept ? 'rgba(0,255,136,0.03)' : isStart ? 'rgba(110,86,207,0.04)' : 'transparent',
+                  }}
+                >
+                  <td style={{
+                    padding: '7px 8px',
+                    fontWeight: 700,
+                    color: isAccept ? 'var(--neon-green)' : isStart ? '#b44dff' : 'var(--text-primary)',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    <span style={{ fontSize: 10, marginRight: 3, opacity: 0.8 }}>
+                      {isStart && isAccept ? '➔*' : isStart ? '➔' : isAccept ? '*' : ' '}
+                    </span>
+                    {state}
+                  </td>
+
+                  {alphabet.map(sym => {
+                    const raw = transitions[state]?.[sym];
+                    const val = formatTarget(raw);
+                    const isEmpty = val === '—';
+                    return (
+                      <td key={sym} style={{
+                        textAlign: 'center', padding: '7px 8px',
+                        color: isEmpty ? 'var(--text-muted)' : 'var(--text-primary)',
+                        opacity: isEmpty ? 0.35 : 1,
+                        fontSize: 11,
+                      }}>
+                        {val}
+                      </td>
+                    );
+                  })}
+
+                  {showEpsilon && (
+                    <td style={{
+                      textAlign: 'center', padding: '7px 8px',
+                      color: formatTarget(epsilon[state]) === '—' ? 'var(--text-muted)' : '#d8b4fe',
+                      opacity: formatTarget(epsilon[state]) === '—' ? 0.35 : 1,
+                      fontSize: 11,
+                    }}>
+                      {formatTarget(epsilon[state])}
+                    </td>
+                  )}
+                </tr>
               );
             })}
-          </div>
-        );
-      })}
-      <div style={{
-        marginTop: 8, fontSize: 11, fontFamily: 'var(--font-mono)',
-        color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: 10,
-      }}>
-        <span><span style={{ color: '#6e56cf' }}>→</span> start</span>
-        <span><span style={{ color: '#00c870' }}>*</span> accept</span>
-        {showEps && <span><span style={{ color: '#b44dff' }}>ε</span> epsilon</span>}
-        <span style={{ marginLeft: 'auto' }}>{states.length} states · {alphabet.length} symbols</span>
+          </tbody>
+        </table>
       </div>
     </div>
   );
